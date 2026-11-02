@@ -1,2 +1,6 @@
 *.exe
 *.pdb
+rust-webgl/target/
+**/target/
+rust-webgl/pkg/
+**/pkg/
