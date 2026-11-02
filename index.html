@@ -4,8 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Swastik's Portfolio</title>
+    <style>
+        #glcanvas {
+            border: 4px solid black;
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
 </head>
 <body>
-    <p>let's see what is my plan? first i am gonna use rust + webgl canvas</p>
+    <canvas id="glcanvas" width="1080" height="720">
+        <script type="module">
+            import init from './rust-webgl/pkg/rust_webgl.js';
+            async function run() {
+                await init();
+            }
+            run();
+        </script>
+    </canvas>
 </body>
 </html>

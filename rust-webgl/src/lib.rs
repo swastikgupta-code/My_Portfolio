@@ -11,7 +11,7 @@ pub fn start()-> Result<(),JsValue> {
         .get_context("webgl")?
         .unwrap()
         .dyn_into::<GL>()?;
-    context.clear_color(0.0, 0.0, 0.0, 1.0);
+    context.clear_color(1.0, 0.0, 0.0, 1.0);
     context.clear(GL::COLOR_BUFFER_BIT);
-    OK(())
+    Ok(())
 }
