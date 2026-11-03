@@ -31,10 +31,11 @@ pub fn start()-> Result<(),JsValue> {
     let frag_shader = compile_shader(&context, GL::FRAGMENT_SHADER, frag_shader_src)?;
     let program = link_shader(&context, &vert_shader, &frag_shader)?;
     context.use_program(Some(&program));
-    let vertices: [f32;6] = [
-        0.0, 0.5,
-        -0.5, -0.5,
-        0.5, -0.5
+    let vertices: [f32;8] = [
+        -0.5,-0.5,
+        -0.5,0.5,
+        0.5,-0.5,
+        0.5,0.5
     ];
     let buffer = context.create_buffer().ok_or("Unable to create Buffer")?;
     context.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer));
@@ -49,7 +50,7 @@ pub fn start()-> Result<(),JsValue> {
     context.enable_vertex_attrib_array(position_loc);
     context.clear_color(1.0, 0.0, 0.0, 1.0);
     context.clear(GL::COLOR_BUFFER_BIT);
-    context.draw_arrays(GL::TRIANGLES, 0, 3);
+    context.draw_arrays(GL::TRIANGLE_STRIP, 0, 4);
     Ok(())
 }
 fn compile_shader(context : &GL,shader_type: u32, source: &str) -> Result<WebGlShader,String> {
