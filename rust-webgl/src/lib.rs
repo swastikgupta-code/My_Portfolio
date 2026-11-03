@@ -4,7 +4,8 @@ use web_sys::{WebGlBuffer,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
 
 #[wasm_bindgen(start)]
 pub fn start()-> Result<(),JsValue> {
-    let document = web_sys::window().unwrap().document().unwrap();
+    let window = web_sys::window().unwrap();
+    let document = window.document().unwrap();
     let canvas = document.get_element_by_id("glcanvas").unwrap();
     let canvas : web_sys::HtmlCanvasElement = canvas.dyn_into::<web_sys::HtmlCanvasElement>()?;
     let context = canvas
@@ -14,18 +15,8 @@ pub fn start()-> Result<(),JsValue> {
 
     context.viewport(0, 0, canvas.width() as i32, canvas.height() as i32);
 
-    let vert_shader_src = r#"
-        attribute vec2 position;
-        void main(){
-            gl_Position = vec4(position,0.0,1.0);
-        }
-    "#;
-    let frag_shader_src = r#"
-    precision mediump float;
-    void main(){
-        gl_FragColor = vec4(0.0,0.8,0.9,1.0);
-    }
-    "#;
+    let vert_shader_src = include_str!("vert_shader.vert");
+    let frag_shader_src = include_str!("frag_shader.frag");
 
     let vert_shader = compile_shader(&context, GL::VERTEX_SHADER, vert_shader_src)?;
     let frag_shader = compile_shader(&context, GL::FRAGMENT_SHADER, frag_shader_src)?;
