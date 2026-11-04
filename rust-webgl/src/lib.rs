@@ -58,19 +58,24 @@ pub fn start()-> Result<(),JsValue> {
     context.vertex_attrib_pointer_with_i32(position_loc, 2, GL::FLOAT, false, 0, 0);
     context.enable_vertex_attrib_array(position_loc);
     let translation_loc = context.get_uniform_location(&program, "translation");
+    let angle_loc = context.get_uniform_location(&program, "angle");
     let mut x = 0.0f32;
+    let mut angle = 0.0f32;
     let mut speed = 0.01f32;
+    let mut rot_speed = 0.01f32;
     let f: Rc<RefCell<Option<Closure<dyn FnMut()>>>> = Rc::new(RefCell::new(None));
     let g = f.clone();
     *g.borrow_mut() = Some(Closure::wrap(Box::new(
         move || {
             x += speed;
+            angle += rot_speed;
             if(x>0.85 || x < -0.85) {
                 speed = -speed;
             }
             context.clear_color(1.0, 0.0, 0.0, 1.0);
             context.clear(GL::COLOR_BUFFER_BIT);
             context.uniform2f(translation_loc.as_ref(),x,0.0);
+            context.uniform1f(angle_loc.as_ref(),angle);
             context.draw_elements_with_i32(GL::TRIANGLES,9,GL::UNSIGNED_SHORT,0);
             window()
                 .unwrap()
