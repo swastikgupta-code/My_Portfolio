@@ -1,12 +1,14 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use js_sys::Uint16Array;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
+use web_sys::window;
 use web_sys::{WebGlBuffer,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
 
 #[wasm_bindgen(start)]
 pub fn start()-> Result<(),JsValue> {
-    let window = web_sys::window().unwrap();
-    let document = window.document().unwrap();
+    let document = web_sys::window().unwrap().document().unwrap();
     let canvas = document.get_element_by_id("glcanvas").unwrap();
     let canvas : web_sys::HtmlCanvasElement = canvas.dyn_into::<web_sys::HtmlCanvasElement>()?;
     let context = canvas
@@ -53,9 +55,42 @@ pub fn start()-> Result<(),JsValue> {
     let position_loc = context.get_attrib_location(&program, "position") as u32;
     context.vertex_attrib_pointer_with_i32(position_loc, 2, GL::FLOAT, false, 0, 0);
     context.enable_vertex_attrib_array(position_loc);
-    context.clear_color(1.0, 0.0, 0.0, 1.0);
-    context.clear(GL::COLOR_BUFFER_BIT);
-    context.draw_elements_with_i32(GL::TRIANGLES,6,GL::UNSIGNED_SHORT,0);
+    let translation_loc = context.get_uniform_location(&program, "translation");
+    let mut x = 0.0f32;
+    let mut speed = 0.01f32;
+    let f: Rc<RefCell<Option<Closure<dyn FnMut()>>>> = Rc::new(RefCell::new(None));
+    let g = f.clone();
+    *g.borrow_mut() = Some(Closure::wrap(Box::new(
+        move || {
+            x += speed;
+            if(x>0.85 || x < -0.85) {
+                speed = -speed;
+            }
+            context.clear_color(1.0, 0.0, 0.0, 1.0);
+            context.clear(GL::COLOR_BUFFER_BIT);
+            context.uniform2f(translation_loc.as_ref(),x,0.0);
+            context.draw_elements_with_i32(GL::TRIANGLES,6,GL::UNSIGNED_SHORT,0);
+            window()
+                .unwrap()
+                .request_animation_frame(
+                    f.borrow()
+                        .as_ref()
+                        .unwrap()
+                        .as_ref()
+                        .unchecked_ref(),
+                )
+                .unwrap();
+        }) as Box<dyn FnMut()>));
+
+        window()
+            .unwrap()
+            .request_animation_frame(
+                g.borrow()
+                    .as_ref()
+                    .unwrap()
+                    .as_ref()
+                    .unchecked_ref(),
+            )?;
     Ok(())
 }
 fn compile_shader(context : &GL,shader_type: u32, source: &str) -> Result<WebGlShader,String> {
