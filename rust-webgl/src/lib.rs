@@ -1,5 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::f32::consts::PI;
+use js_sys::Math;
 use js_sys::Uint16Array;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -25,18 +27,24 @@ pub fn start()-> Result<(),JsValue> {
     let frag_shader = compile_shader(&context, GL::FRAGMENT_SHADER, frag_shader_src)?;
     let program = link_shader(&context, &vert_shader, &frag_shader)?;
     context.use_program(Some(&program));
-    let vertices: [f32;10] = [
-        -0.5,-0.5,
-        -0.5,0.5,
-        0.0,0.75,
-        0.5,-0.5,
-        0.5,0.5
-    ];
-    let indices: [u16; 9] = [
-        0,1,2,
-        3,2,4,
-        0,2,3
-    ];
+    let sides: usize = 6;
+    let mut vertices: Vec<(f32,f32)> = Vec::with_capacity(sides+1);
+    let mut indices: Vec<u16> = Vec::with_capacity(sides*3);
+    let rad:f32 = 0.6;
+    vertices.push((0.0,0.0));
+    for i in 0..=6 {
+        let angle = (i as f32)*2.0*PI/6.0;
+        vertices.push((rad*angle.cos(),rad*angle.sin()));
+    }
+    indices.push(0);
+    for i in 1..=6 {
+        let next = i+1;
+        indices.push(i as u16);
+        indices.push(next as u16);
+    }
+    let vertices_slice : &[f32] = unsafe {
+        std::slice::from_raw_parts(vertices.as_ptr() as *const f32, vertices.len()*2)
+    };
     let position_buffer = context.create_buffer().ok_or("Unable to create position Buffer")?;
     context.bind_buffer(GL::ARRAY_BUFFER, Some(&position_buffer));
 
@@ -44,7 +52,7 @@ pub fn start()-> Result<(),JsValue> {
     context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER,Some(&index_buffer));
 
     unsafe {
-        let vert_array = js_sys::Float32Array::view(&vertices);
+        let vert_array = js_sys::Float32Array::view(&vertices_slice);
         context.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::STATIC_DRAW);
         let indices_array = Uint16Array::view(&indices);
         context.buffer_data_with_array_buffer_view(
@@ -76,7 +84,7 @@ pub fn start()-> Result<(),JsValue> {
             context.clear(GL::COLOR_BUFFER_BIT);
             context.uniform2f(translation_loc.as_ref(),x,0.0);
             context.uniform1f(angle_loc.as_ref(),angle);
-            context.draw_elements_with_i32(GL::TRIANGLES,9,GL::UNSIGNED_SHORT,0);
+            context.draw_elements_with_i32(GL::TRIANGLES,18,GL::UNSIGNED_SHORT,0);
             window()
                 .unwrap()
                 .request_animation_frame(
