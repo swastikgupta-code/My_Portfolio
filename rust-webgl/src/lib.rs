@@ -30,15 +30,24 @@ pub fn start()-> Result<(),JsValue> {
     let sides: usize = 6;
     let mut vertices: Vec<(f32,f32)> = Vec::with_capacity(sides+1);
     let mut indices: Vec<u16> = Vec::with_capacity(sides*3);
+    let color : [f32;21] = [
+        1.0,1.0,1.0,
+        0.13,0.87,0.12,
+        0.13,0.87,0.12,
+        0.13,0.87,0.12,
+        0.13,0.87,0.12,
+        0.13,0.87,0.12,
+        0.13,0.87,0.12,
+    ];
     let rad:f32 = 0.6;
     vertices.push((0.0,0.0));
-    for i in 0..=6 {
+    for i in 0..6 {
         let angle = (i as f32)*2.0*PI/6.0;
         vertices.push((rad*angle.cos(),rad*angle.sin()));
     }
-    indices.push(0);
     for i in 1..=6 {
-        let next = i+1;
+        let next = if i==sides {1} else {i+1};
+        indices.push(0);
         indices.push(i as u16);
         indices.push(next as u16);
     }
@@ -52,7 +61,7 @@ pub fn start()-> Result<(),JsValue> {
     context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER,Some(&index_buffer));
 
     unsafe {
-        let vert_array = js_sys::Float32Array::view(&vertices_slice);
+        let vert_array = js_sys::Float32Array::view(vertices_slice);
         context.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::STATIC_DRAW);
         let indices_array = Uint16Array::view(&indices);
         context.buffer_data_with_array_buffer_view(
@@ -61,11 +70,21 @@ pub fn start()-> Result<(),JsValue> {
             GL::STATIC_DRAW
         );
     }
-
     let position_loc = context.get_attrib_location(&program, "position") as u32;
     context.vertex_attrib_pointer_with_i32(position_loc, 2, GL::FLOAT, false, 0, 0);
     context.enable_vertex_attrib_array(position_loc);
+
+    let color_buffer = context.create_buffer().ok_or("unable to create color buffer")?;
+    context.bind_buffer(GL::ARRAY_BUFFER, Some(&color_buffer));
+
+    unsafe {
+        let color_view = js_sys::Float32Array::view(&color);
+        context.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &color_view, GL::STATIC_DRAW);
+    }
     let translation_loc = context.get_uniform_location(&program, "translation");
+    let color_loc = context.get_attrib_location(&program, "color") as u32;
+    context.vertex_attrib_pointer_with_i32(color_loc, 3, GL::FLOAT, false, 0, 0);
+    context.enable_vertex_attrib_array(color_loc);
     let angle_loc = context.get_uniform_location(&program, "angle");
     let mut x = 0.0f32;
     let mut angle = 0.0f32;
