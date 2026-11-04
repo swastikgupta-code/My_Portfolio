@@ -1,3 +1,4 @@
+use js_sys::Uint16Array;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{WebGlBuffer,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
@@ -28,12 +29,25 @@ pub fn start()-> Result<(),JsValue> {
         0.5,-0.5,
         0.5,0.5
     ];
-    let buffer = context.create_buffer().ok_or("Unable to create Buffer")?;
-    context.bind_buffer(GL::ARRAY_BUFFER, Some(&buffer));
+    let indices: [u16; 6] = [
+        0,1,2,
+        1,2,3
+    ];
+    let position_buffer = context.create_buffer().ok_or("Unable to create position Buffer")?;
+    context.bind_buffer(GL::ARRAY_BUFFER, Some(&position_buffer));
+
+    let index_buffer = context.create_buffer().ok_or("Unable to create index buffer")?;
+    context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER,Some(&index_buffer));
 
     unsafe {
         let vert_array = js_sys::Float32Array::view(&vertices);
         context.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::STATIC_DRAW);
+        let indices_array = Uint16Array::view(&indices);
+        context.buffer_data_with_array_buffer_view(
+            GL::ELEMENT_ARRAY_BUFFER,
+            &indices_array,
+            GL::STATIC_DRAW
+        );
     }
 
     let position_loc = context.get_attrib_location(&program, "position") as u32;
@@ -41,7 +55,7 @@ pub fn start()-> Result<(),JsValue> {
     context.enable_vertex_attrib_array(position_loc);
     context.clear_color(1.0, 0.0, 0.0, 1.0);
     context.clear(GL::COLOR_BUFFER_BIT);
-    context.draw_arrays(GL::TRIANGLE_STRIP, 0, 4);
+    context.draw_elements_with_i32(GL::TRIANGLES,6,GL::UNSIGNED_SHORT,0);
     Ok(())
 }
 fn compile_shader(context : &GL,shader_type: u32, source: &str) -> Result<WebGlShader,String> {
