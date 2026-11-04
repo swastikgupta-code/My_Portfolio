@@ -25,15 +25,17 @@ pub fn start()-> Result<(),JsValue> {
     let frag_shader = compile_shader(&context, GL::FRAGMENT_SHADER, frag_shader_src)?;
     let program = link_shader(&context, &vert_shader, &frag_shader)?;
     context.use_program(Some(&program));
-    let vertices: [f32;8] = [
+    let vertices: [f32;10] = [
         -0.5,-0.5,
         -0.5,0.5,
+        0.0,0.75,
         0.5,-0.5,
         0.5,0.5
     ];
-    let indices: [u16; 6] = [
+    let indices: [u16; 9] = [
         0,1,2,
-        1,2,3
+        3,2,4,
+        0,2,3
     ];
     let position_buffer = context.create_buffer().ok_or("Unable to create position Buffer")?;
     context.bind_buffer(GL::ARRAY_BUFFER, Some(&position_buffer));
@@ -69,7 +71,7 @@ pub fn start()-> Result<(),JsValue> {
             context.clear_color(1.0, 0.0, 0.0, 1.0);
             context.clear(GL::COLOR_BUFFER_BIT);
             context.uniform2f(translation_loc.as_ref(),x,0.0);
-            context.draw_elements_with_i32(GL::TRIANGLES,6,GL::UNSIGNED_SHORT,0);
+            context.draw_elements_with_i32(GL::TRIANGLES,9,GL::UNSIGNED_SHORT,0);
             window()
                 .unwrap()
                 .request_animation_frame(
