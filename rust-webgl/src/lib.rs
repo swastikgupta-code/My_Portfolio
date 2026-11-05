@@ -1,18 +1,13 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::f32::consts::PI;
-use js_sys::Math;
-use js_sys::Uint16Array;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::window;
-use web_sys::{WebGlBuffer,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
-
+use web_sys::{window,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
 #[wasm_bindgen(start)]
 pub fn start()-> Result<(),JsValue> {
-    let document = web_sys::window().unwrap().document().unwrap();
-    let canvas = document.get_element_by_id("glcanvas").unwrap();
-    let canvas : web_sys::HtmlCanvasElement = canvas.dyn_into::<web_sys::HtmlCanvasElement>()?;
+    let window = window().expect("unable to create window");
+    let document = window.document().expect("unable to create document");
+    let canvas = document.get_element_by_id("glcanvas").expect("cannot find element canvas").dyn_into::<HtmlCanvasElement>()?;
     let context = canvas
         .get_context("webgl")?
         .unwrap()
@@ -27,84 +22,66 @@ pub fn start()-> Result<(),JsValue> {
     let frag_shader = compile_shader(&context, GL::FRAGMENT_SHADER, frag_shader_src)?;
     let program = link_shader(&context, &vert_shader, &frag_shader)?;
     context.use_program(Some(&program));
-    let sides: usize = 6;
-    let mut vertices: Vec<(f32,f32)> = Vec::with_capacity(sides+1);
-    let mut indices: Vec<u16> = Vec::with_capacity(sides*3);
-    let color : [f32;21] = [
-        1.0,1.0,1.0,
-        0.13,0.87,0.12,
-        0.13,0.87,0.12,
-        0.13,0.87,0.12,
-        0.13,0.87,0.12,
-        0.13,0.87,0.12,
-        0.13,0.87,0.12,
+
+    let width = window.inner_width()?.as_f64().unwrap_or(1920.0) as u32;
+    let height = window.inner_height()?.as_f64().unwrap_or(1080.0) as u32;
+    canvas.set_width(width);
+    canvas.set_height(height);
+    context.viewport(0, 0, width as i32, height as i32);
+    
+    let vertices: [f32;12] = [
+        -1.0,-1.0,
+        1.0,-1.0,
+        -1.0,1.0,
+        -1.0,1.0,
+        1.0,-1.0,
+        1.0,1.0
     ];
-    let rad:f32 = 0.6;
-    vertices.push((0.0,0.0));
-    for i in 0..6 {
-        let angle = (i as f32)*2.0*PI/6.0;
-        vertices.push((rad*angle.cos(),rad*angle.sin()));
-    }
-    for i in 1..=6 {
-        let next = if i==sides {1} else {i+1};
-        indices.push(0);
-        indices.push(i as u16);
-        indices.push(next as u16);
-    }
-    let vertices_slice : &[f32] = unsafe {
-        std::slice::from_raw_parts(vertices.as_ptr() as *const f32, vertices.len()*2)
-    };
     let position_buffer = context.create_buffer().ok_or("Unable to create position Buffer")?;
     context.bind_buffer(GL::ARRAY_BUFFER, Some(&position_buffer));
 
-    let index_buffer = context.create_buffer().ok_or("Unable to create index buffer")?;
-    context.bind_buffer(GL::ELEMENT_ARRAY_BUFFER,Some(&index_buffer));
-
     unsafe {
-        let vert_array = js_sys::Float32Array::view(vertices_slice);
+        let vert_array = js_sys::Float32Array::view(&vertices);
         context.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &vert_array, GL::STATIC_DRAW);
-        let indices_array = Uint16Array::view(&indices);
-        context.buffer_data_with_array_buffer_view(
-            GL::ELEMENT_ARRAY_BUFFER,
-            &indices_array,
-            GL::STATIC_DRAW
-        );
     }
     let position_loc = context.get_attrib_location(&program, "position") as u32;
     context.vertex_attrib_pointer_with_i32(position_loc, 2, GL::FLOAT, false, 0, 0);
     context.enable_vertex_attrib_array(position_loc);
+    
+    let res_loc = context.get_uniform_location(&program, "res");
+    let mos_loc = context.get_uniform_location(&program,"u_mouse");
+    let time_loc = context.get_uniform_location(&program, "time");
 
-    let color_buffer = context.create_buffer().ok_or("unable to create color buffer")?;
-    context.bind_buffer(GL::ARRAY_BUFFER, Some(&color_buffer));
-
-    unsafe {
-        let color_view = js_sys::Float32Array::view(&color);
-        context.buffer_data_with_array_buffer_view(GL::ARRAY_BUFFER, &color_view, GL::STATIC_DRAW);
+    let mouse_pos  = Rc::new(RefCell::new((0.0f32,0.0f32)));
+    {
+        let mouse_pos = mouse_pos.clone();
+        let mouse_callback = Closure::wrap(Box::new(move | event: MouseEvent | {
+            let win = web_sys::window().unwrap();
+            let w = win.inner_width().unwrap().as_f64().unwrap_or(1.0) as f32;
+            let h = win.inner_height().unwrap().as_f64().unwrap_or(1.0) as f32;
+            let x = (event.client_x() as f32/w)*2.0 - 1.0;
+            let y = -(event.client_y() as f32/h)*2.0 + 1.0;
+            *mouse_pos.borrow_mut() = (x,y);
+        }) as Box<dyn FnMut(_)>);
+        window.add_event_listener_with_callback("mousemove", mouse_callback.as_ref().unchecked_ref())?;
+        mouse_callback.forget();
     }
-    let translation_loc = context.get_uniform_location(&program, "translation");
-    let color_loc = context.get_attrib_location(&program, "color") as u32;
-    context.vertex_attrib_pointer_with_i32(color_loc, 3, GL::FLOAT, false, 0, 0);
-    context.enable_vertex_attrib_array(color_loc);
-    let angle_loc = context.get_uniform_location(&program, "angle");
-    let mut x = 0.0f32;
-    let mut angle = 0.0f32;
-    let mut speed = 0.01f32;
-    let mut rot_speed = 0.01f32;
+    let mut time = 0.0f32;
+
     let f: Rc<RefCell<Option<Closure<dyn FnMut()>>>> = Rc::new(RefCell::new(None));
     let g = f.clone();
     *g.borrow_mut() = Some(Closure::wrap(Box::new(
         move || {
-            x += speed;
-            angle += rot_speed;
-            if(x>0.85 || x < -0.85) {
-                speed = -speed;
-            }
+            time += 0.016f32;
+            let (mx,my) = *mouse_pos.borrow();
             context.clear_color(1.0, 0.0, 0.0, 1.0);
             context.clear(GL::COLOR_BUFFER_BIT);
-            context.uniform2f(translation_loc.as_ref(),x,0.0);
-            context.uniform1f(angle_loc.as_ref(),angle);
-            context.draw_elements_with_i32(GL::TRIANGLES,18,GL::UNSIGNED_SHORT,0);
-            window()
+
+            context.uniform2f(res_loc.as_ref(),width as f32,height as f32);
+            context.uniform2f(mos_loc.as_ref(), mx,my);
+            context.uniform1f(time_loc.as_ref(),time);
+            context.draw_arrays(GL::TRIANGLES, 0, 6);
+            web_sys::window()
                 .unwrap()
                 .request_animation_frame(
                     f.borrow()
@@ -116,7 +93,7 @@ pub fn start()-> Result<(),JsValue> {
                 .unwrap();
         }) as Box<dyn FnMut()>));
 
-        window()
+        web_sys::window()
             .unwrap()
             .request_animation_frame(
                 g.borrow()

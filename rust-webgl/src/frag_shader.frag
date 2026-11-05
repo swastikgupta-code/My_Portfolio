@@ -25,7 +25,7 @@ vec3 render(vec2 uv,vec2 pos,vec2 mouse)
     float pupil_dist = length(pupil_pos);
     vec3 eye_core_color = vec3(0.9,0.95,1.0);
     vec3 eye_glow_color = vec3(0.1,0.55,1.0);
-    float pupil_slit = length(pupil_pos/vec2(0.025,0.75));
+    float pupil_slit = length(pupil_pos/vec2(0.025,0.075));
     float pupil_mask = smoothstep(1.0,0.8,pupil_slit);
     float inside_eye = smoothstep(0.01,-0.01,d_eye);
     float glow = 0.035/(max(d_eye,0.001)+0.06);
