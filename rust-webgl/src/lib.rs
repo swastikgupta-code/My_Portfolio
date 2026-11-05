@@ -51,6 +51,7 @@ pub fn start()-> Result<(),JsValue> {
     let res_loc = context.get_uniform_location(&program, "res");
     let mos_loc = context.get_uniform_location(&program,"u_mouse");
     let time_loc = context.get_uniform_location(&program, "time");
+    let eye_height_loc = context.get_uniform_location(&program, "eye_height");
 
     let mouse_pos  = Rc::new(RefCell::new((0.0f32,0.0f32)));
     {
@@ -67,12 +68,14 @@ pub fn start()-> Result<(),JsValue> {
         mouse_callback.forget();
     }
     let mut time = 0.0f32;
+    let mut eye_height = 0.01f32;
 
     let f: Rc<RefCell<Option<Closure<dyn FnMut()>>>> = Rc::new(RefCell::new(None));
     let g = f.clone();
     *g.borrow_mut() = Some(Closure::wrap(Box::new(
         move || {
             time += 0.016f32;
+            if(eye_height<0.11) { eye_height += 0.001f32; }
             let (mx,my) = *mouse_pos.borrow();
             context.clear_color(1.0, 0.0, 0.0, 1.0);
             context.clear(GL::COLOR_BUFFER_BIT);
@@ -80,6 +83,7 @@ pub fn start()-> Result<(),JsValue> {
             context.uniform2f(res_loc.as_ref(),width as f32,height as f32);
             context.uniform2f(mos_loc.as_ref(), mx,my);
             context.uniform1f(time_loc.as_ref(),time);
+            context.uniform1f(eye_height_loc.as_ref(),eye_height);
             context.draw_arrays(GL::TRIANGLES, 0, 6);
             web_sys::window()
                 .unwrap()

@@ -2,7 +2,9 @@ precision mediump float;
 uniform vec2 res;
 uniform vec2 u_mouse;
 uniform float time;
+uniform float eye_height;
 varying vec2 v_uv;
+
 
 float sd_ellipse(vec2 p,vec2 rad)
 {
@@ -13,7 +15,7 @@ float sd_ellipse(vec2 p,vec2 rad)
 vec3 render(vec2 uv,vec2 pos,vec2 mouse)
 {
     vec2 p = uv - pos;
-    vec2 rad = vec2(0.22,0.11);
+    vec2 rad = vec2(0.22,eye_height);
     p.y /= (1.0-0.9*abs(p.x/rad.x));
     float d_eye = sd_ellipse(p,rad);
     vec2 to_mouse = mouse - pos;
@@ -45,8 +47,8 @@ void main()
     vec2 mouse = u_mouse*aspect;
     float offset = sin(time*1.5)*0.01;
     uv.y += offset;
-    vec2 left_eye_pos = vec2(-0.38,0.0);
-    vec2 right_eye_pos = vec2(0.38,0.0);
+    vec2 left_eye_pos = vec2(-0.38,0.5);
+    vec2 right_eye_pos = vec2(0.38,0.5);
     vec3 right_col = render(uv,right_eye_pos,mouse);
     vec3 left_col = render(uv,left_eye_pos,mouse);
     vec3 col = left_col + right_col;
