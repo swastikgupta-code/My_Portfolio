@@ -69,13 +69,40 @@ pub fn start()-> Result<(),JsValue> {
     }
     let mut time = 0.0f32;
     let mut eye_height = 0.01f32;
+    let mut speed = 0.001f32;
+    let mut change = 0;
+    let mut is_first = true;
+    let mut blink_time = 0.0f32;
+    let mut is_blinking = true;
 
     let f: Rc<RefCell<Option<Closure<dyn FnMut()>>>> = Rc::new(RefCell::new(None));
     let g = f.clone();
     *g.borrow_mut() = Some(Closure::wrap(Box::new(
         move || {
             time += 0.016f32;
-            if(eye_height<0.11) { eye_height += 0.001f32; }
+            if(eye_height>0.11 && speed>0.0)|| (eye_height<0.01 && speed<0.0)
+            { 
+                speed = -speed; 
+                change+= 1;
+            }
+            if(is_first && change==1) || change == 2
+            {
+                if is_first { is_first = false;}
+                is_blinking = false;
+                change = 0;
+            }
+            if !is_blinking 
+            {
+                blink_time += 0.016f32;
+            }
+            if blink_time>10.0 {
+                is_blinking = true;
+                blink_time = 0.0;
+            }
+            if is_blinking
+            {
+                eye_height += speed;
+            }
             let (mx,my) = *mouse_pos.borrow();
             context.clear_color(1.0, 0.0, 0.0, 1.0);
             context.clear(GL::COLOR_BUFFER_BIT);
