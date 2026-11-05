@@ -47,8 +47,8 @@ void main()
     vec2 mouse = u_mouse*aspect;
     float offset = sin(time*1.5)*0.01;
     uv.y += offset;
-    vec2 left_eye_pos = vec2(-0.38,0.5);
-    vec2 right_eye_pos = vec2(0.38,0.5);
+    vec2 left_eye_pos = vec2(-0.38,0.7);
+    vec2 right_eye_pos = vec2(0.38,0.7);
     vec3 right_col = render(uv,right_eye_pos,mouse);
     vec3 left_col = render(uv,left_eye_pos,mouse);
     vec3 col = left_col + right_col;
