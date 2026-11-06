@@ -67,6 +67,24 @@ float brownian(vec2 p){
     }
     return v;
 }
+float voronoi_cracks(vec2 p)
+{
+    vec2 n = floor(p);
+    vec2 f = fract(p);
+    float md = 8.0;
+    for(int j = -1;j<=1;j++)
+    {
+        for(int i = -1;i<=1;i++)
+        {
+            vec2 g = vec2(float(i),float(j));
+            vec2 o = hash2(n+g);
+            vec2 r = g+o-f;
+            float d = dot(r,r);
+            md = min(md,d);
+        }
+    }
+    return sqrt(md);
+}
 vec3 lava(vec2 uv,vec2 pos,vec2 card_half)
 {
     vec2 d = uv - pos;
@@ -92,7 +110,20 @@ vec3 lava(vec2 uv,vec2 pos,vec2 card_half)
     float flame = smoothstep(0.32,0.85,inten+(1.0-c_uv.y)*0.25);
     sky_col = mix(sky_col,orange,flame);
     sky_col = mix(sky_col, yellow, smoothstep(0.70, 0.95, inten + (0.5 - c_uv.y) * 0.3));
-    return sky_col;
+    float lava_level = -0.22 + 0.04 * sin(c_uv.x*4.5 + time * 1.8);
+    float laval_region = smoothstep(0.04,-0.04,c_uv.y-lava_level);
+    vec2 lava_uv = vec2(c_uv.x * 3.2, (c_uv.y - lava_level) * 6.5);;
+    lava_uv += 0.25 * vec2(brownian(lava_uv + time * 0.3), brownian(lava_uv + vec2(3.1, time * 0.2)));
+    float cracks = voronoi_cracks(lava_uv + vec2(sin(time * 0.4), time * 0.15));;
+    vec3 molten_core = vec3(1.0, 0.92, 0.45);
+    vec3 molten_body = vec3(1.0, 0.36, 0.02);
+    vec3 crust_top = vec3(0.75, 0.10, 0.01);
+    vec3 crust_edge = vec3(0.24, 0.04, 0.02);
+    vec3 magma_col = mix(molten_core,molten_body,smoothstep(0.08,0.28,cracks));
+    magma_col = mix(magma_col,crust_edge,smoothstep(0.28,0.48,cracks));
+    magma_col = mix(magma_col,crust_top,smoothstep(0.48,0.78,cracks));
+    vec3 scene_col = mix(magma_col,sky_col,laval_region);
+    return scene_col;
 }
 vec3 ocean(vec2 uv,vec2 pos)
 {
