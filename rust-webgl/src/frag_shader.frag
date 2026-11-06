@@ -16,7 +16,8 @@ vec3 render(vec2 uv,vec2 pos,vec2 mouse)
 {
     vec2 p = uv - pos;
     vec2 rad = vec2(0.22,eye_height);
-    p.y /= (1.0-0.9*abs(p.x/rad.x));
+    float nx = clamp(abs(p.x/rad.x),0.0,0.999);
+    p.y /= 1.0 - 0.7 * (nx*nx);
     float d_eye = sd_ellipse(p,rad);
     vec2 to_mouse = mouse - pos;
     float dist_mouse = length(to_mouse);
@@ -46,14 +47,19 @@ void main()
     vec2 uv = v_uv * aspect;
     vec2 mouse = u_mouse*aspect;
     float offset = sin(time*1.5)*0.01;
-    uv.y += offset;
+    vec2 e_uv = uv;
+    e_uv.y += offset;
     vec2 left_eye_pos = vec2(-0.38,0.7);
     vec2 right_eye_pos = vec2(0.38,0.7);
-    vec3 right_col = render(uv,right_eye_pos,mouse);
-    vec3 left_col = render(uv,left_eye_pos,mouse);
-    vec3 col = left_col + right_col;
-    float black = smoothstep(1.8,0.4,length(v_uv));
-    col *= black;
-    gl_FragColor = vec4(col,1.0);
+    vec3 right_col = render(e_uv,right_eye_pos,mouse);
+    vec3 left_col = render(e_uv,left_eye_pos,mouse);
+    vec3 e_col = left_col + right_col;
+    float e_black = smoothstep(1.8,0.4,length(v_uv));
+    e_col *= e_black;
+    vec3 c1_col = vec3(1.0,0.5,0.0);
+    float c1_black = smoothstep(0.8,0.8,length(v_uv));
+    c1_col *= c1_black;
+    vec3 col = e_col + c1_col;
+    gl_FragColor = vec4(e_col,1.0);
 }
 
