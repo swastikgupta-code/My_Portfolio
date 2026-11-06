@@ -56,10 +56,16 @@ void main()
     vec3 e_col = left_col + right_col;
     float e_black = smoothstep(1.8,0.4,length(v_uv));
     e_col *= e_black;
+    vec2 c1_center = vec2(-0.55*aspect.x,-0.4);
+    vec2 card_half = vec2(0.18,0.35);
+    vec2 c1_p = uv - c1_center;
+    float border = 0.005;
+    vec2 d= abs(c1_p)-card_half;
+    vec2 edge = smoothstep(vec2(border),vec2(-border),d);
+    float c1_black = edge.x*edge.y;
     vec3 c1_col = vec3(1.0,0.5,0.0);
-    float c1_black = smoothstep(0.8,0.8,length(v_uv));
     c1_col *= c1_black;
     vec3 col = e_col + c1_col;
-    gl_FragColor = vec4(e_col,1.0);
+    gl_FragColor = vec4(col,1.0);
 }
 

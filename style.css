@@ -6,7 +6,7 @@
 body {
     min-height: 100vh;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 #glcanvas {
@@ -20,8 +20,8 @@ body {
     z-index: 0;
 }
 #welcome {
-    font-size: clamp(2rem,6vw,4.5rem);
-    font-weight: 800;
+    font-size: clamp(2rem,10vw,6rem);
+    font-weight: 1000;
     z-index: 10;
     position: absolute;
     background: linear-gradient(135deg, #21093d 0%, #3f1b87 50%, #8b72bd 100%);
@@ -35,6 +35,7 @@ body {
     width: 100%;
     display: flex;
     justify-content: center;
+    margin-top: 23vh;
 }
 .letter {
     display:inline-block;
