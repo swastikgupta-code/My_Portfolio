@@ -40,6 +40,10 @@ vec3 render(vec2 uv,vec2 pos,vec2 mouse)
     col = mix(col,eye_surface,inside_eye);
     return col;
 }
+float hash1(vec2 p) {
+    float g = dot(p,vec2(127.1,311.7));
+    return fract(sin(g)*43758.5453123);
+}
 vec2 hash2(vec2 p) {
     p = vec2(dot(p, vec2(127.1, 311.7)),
              dot(p, vec2(269.5, 183.3)));
@@ -48,7 +52,7 @@ vec2 hash2(vec2 p) {
 float noise(vec2 p)
 {
     vec2 i = floor(p);
-    vec2 f = floor(p);
+    vec2 f = fract(p);
     vec2 u  = f*f*(3.0-2.0*f);
     float a  = dot(hash2(i),f);
     float b = dot(hash2(i+vec2(1.0,0.0)),f-vec2(1.0,0.0));
@@ -90,8 +94,8 @@ vec3 lava(vec2 uv,vec2 pos,vec2 card_half)
     vec2 d = uv - pos;
     vec2 dist = abs(d) - card_half;
     float edge_dist = max(dist.x,dist.y);
-    float card_mask = 1.0 - smoothstep(-0.0015,0.0,edge_dist);
-    if(card_mask<0.0) return vec3(0.0);
+    float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
+    if(card_mask<=0.0) return vec3(0.0);
     vec2 c_uv = d/card_half;
     vec2 flame_uv = c_uv * vec2(1.8,1.2);
     flame_uv.y -= time*0.75;
@@ -102,8 +106,8 @@ vec3 lava(vec2 uv,vec2 pos,vec2 card_half)
     );
     float inten = brownian(flame_uv + flame_turb *2.0);
     vec3 dark_crimson = vec3(0.28, 0.03, 0.01);
-    vec3 crimson = vec3(0.82, 0.12, 0.01);;
-    vec3 orange = vec3(1.0,  0.48, 0.02);;
+    vec3 crimson = vec3(0.82, 0.12, 0.01);
+    vec3 orange = vec3(1.0,  0.48, 0.02);
     vec3 yellow = vec3(1.0,  0.88, 0.25);
     float gradient = clamp(0.95-c_uv.y*0.65,0.0,1.0);
     vec3 sky_col = mix(dark_crimson,crimson,gradient);
@@ -122,8 +126,21 @@ vec3 lava(vec2 uv,vec2 pos,vec2 card_half)
     vec3 magma_col = mix(molten_core,molten_body,smoothstep(0.08,0.28,cracks));
     magma_col = mix(magma_col,crust_edge,smoothstep(0.28,0.48,cracks));
     magma_col = mix(magma_col,crust_top,smoothstep(0.48,0.78,cracks));
-    vec3 scene_col = mix(magma_col,sky_col,laval_region);
-    return scene_col;
+    vec3 scene_col = mix(sky_col,magma_col,laval_region);
+    float rock_profile = -0.58;
+    rock_profile += 0.18 * sin(c_uv.x * 3.0 + 0.4);
+    rock_profile += 0.10 * sin(c_uv.x * 7.5 + 1.8);
+    rock_profile += 0.07 * noise(vec2(c_uv.x * 14.0, 0.0));
+    rock_profile += 0.30 * pow(abs(c_uv.x), 2.2);
+    float rock_mask = smoothstep(0.02, -0.02, c_uv.y - rock_profile);
+    float rock_fbm = brownian(c_uv * 8.0);
+    vec3 base_rock = mix(vec3(0.18, 0.04, 0.02), vec3(0.32, 0.08, 0.03), rock_fbm);
+    float ridge_glow = smoothstep(0.09, 0.0, abs(c_uv.y - rock_profile));
+    base_rock += vec3(1.0, 0.35, 0.02) * ridge_glow * 1.1;
+    float fissure = smoothstep(0.05, 0.0, abs(c_uv.y - rock_profile + 0.04 * sin(c_uv.x * 12.0)));
+    base_rock += vec3(1.0, 0.65, 0.1) * fissure * (0.6 + 0.4 * sin(time * 2.8 + c_uv.x * 9.0));
+    scene_col = mix(scene_col, base_rock, rock_mask);
+    return scene_col *card_mask;
 }
 vec3 ocean(vec2 uv,vec2 pos)
 {
