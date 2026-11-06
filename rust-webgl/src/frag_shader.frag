@@ -40,7 +40,49 @@ vec3 render(vec2 uv,vec2 pos,vec2 mouse)
     col = mix(col,eye_surface,inside_eye);
     return col;
 }
-
+vec3 lava(vec2 uv,vec2 pos)
+{
+    return vec3(1.0,0.5,0.0);
+}
+vec3 ocean(vec2 uv,vec2 pos)
+{
+    return vec3(0,0.2,1.0);
+}
+vec3 nature(vec2 uv,vec2 pos)
+{
+    return vec3(0.1,1.0,0.3);
+}
+vec3 lightning(vec2 uv,vec2 pos)
+{
+    return vec3(1.0,1.0,0.0);
+}
+vec3 card_color(vec2 aspect,vec2 uv)
+{
+    vec2 c1_center = vec2(-0.55*aspect.x,-0.4);
+    vec2 card_half = vec2(0.18,0.35);
+    vec2 gap = vec2(0.6,0.0);
+    vec3 col = vec3(0.0);
+    for(int i = 0;i<4;i++) {
+        vec2 cen = c1_center + gap*float(i);
+        vec2 p = uv - cen;
+        vec2 d= abs(p)-card_half;
+        float border = 0.005;
+        vec2 edge = smoothstep(vec2(border),vec2(-border),d);
+        float black = edge.x*edge.y;
+        vec3 c_col = vec3(0.0);
+        if(i==0)
+            c_col = lava(uv,cen);
+        else if(i==1)
+            c_col = ocean(uv,cen);
+        else if(i==2)
+            c_col = nature(uv,cen);
+        else if(i==3)
+            c_col = lightning(uv,cen);
+        c_col *= black;
+        col += c_col;
+    }
+    return col;
+}
 void main()
 {
     vec2 aspect = vec2(res.x/res.y,1.0);
@@ -56,16 +98,7 @@ void main()
     vec3 e_col = left_col + right_col;
     float e_black = smoothstep(1.8,0.4,length(v_uv));
     e_col *= e_black;
-    vec2 c1_center = vec2(-0.55*aspect.x,-0.4);
-    vec2 card_half = vec2(0.18,0.35);
-    vec2 c1_p = uv - c1_center;
-    float border = 0.005;
-    vec2 d= abs(c1_p)-card_half;
-    vec2 edge = smoothstep(vec2(border),vec2(-border),d);
-    float c1_black = edge.x*edge.y;
-    vec3 c1_col = vec3(1.0,0.5,0.0);
-    c1_col *= c1_black;
-    vec3 col = e_col + c1_col;
+    vec3 c_col = card_color(aspect,uv);
+    vec3 col = e_col + c_col;
     gl_FragColor = vec4(col,1.0);
 }
-
