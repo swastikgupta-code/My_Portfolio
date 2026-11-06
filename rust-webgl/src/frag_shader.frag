@@ -40,9 +40,59 @@ vec3 render(vec2 uv,vec2 pos,vec2 mouse)
     col = mix(col,eye_surface,inside_eye);
     return col;
 }
-vec3 lava(vec2 uv,vec2 pos)
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)),
+             dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453123);
+}
+float noise(vec2 p)
 {
-    return vec3(1.0,0.5,0.0);
+    vec2 i = floor(p);
+    vec2 f = floor(p);
+    vec2 u  = f*f*(3.0-2.0*f);
+    float a  = dot(hash2(i),f);
+    float b = dot(hash2(i+vec2(1.0,0.0)),f-vec2(1.0,0.0));
+    float c = dot(hash2(i+vec2(1.0,1.0)),f-vec2(1.0,1.0));
+    float d = dot(hash2(i+vec2(0.0,1.0)),f-vec2(0.0,1.0));
+    return mix(mix(a,b,u.x),mix(c,d,u.x),u.y) + 0.5;
+}
+float brownian(vec2 p){
+    float v = 0.0;
+    float a = 0.5;
+    for(int i = 0;i<4;i++)
+    {
+        v+= a * noise(p);
+        p = p*2.08 + vec2(1.3,0.7);
+        a *= 0.5;
+    }
+    return v;
+}
+vec3 lava(vec2 uv,vec2 pos,vec2 card_half)
+{
+    vec2 d = uv - pos;
+    vec2 dist = abs(d) - card_half;
+    float edge_dist = max(dist.x,dist.y);
+    float card_mask = 1.0 - smoothstep(-0.0015,0.0,edge_dist);
+    if(card_mask<0.0) return vec3(0.0);
+    vec2 c_uv = d/card_half;
+    vec2 flame_uv = c_uv * vec2(1.8,1.2);
+    flame_uv.y -= time*0.75;
+    flame_uv.x += sin(c_uv.y*3.5+ time*1.6) * 0.18;
+    vec2 flame_turb = vec2(
+        brownian(flame_uv),
+        brownian(flame_uv + vec2(4.3,1.7))
+    );
+    float inten = brownian(flame_uv + flame_turb *2.0);
+    vec3 dark_crimson = vec3(0.28, 0.03, 0.01);
+    vec3 crimson = vec3(0.82, 0.12, 0.01);;
+    vec3 orange = vec3(1.0,  0.48, 0.02);;
+    vec3 yellow = vec3(1.0,  0.88, 0.25);
+    float gradient = clamp(0.95-c_uv.y*0.65,0.0,1.0);
+    vec3 sky_col = mix(dark_crimson,crimson,gradient);
+    float flame = smoothstep(0.32,0.85,inten+(1.0-c_uv.y)*0.25);
+    sky_col = mix(sky_col,orange,flame);
+    sky_col = mix(sky_col, yellow, smoothstep(0.70, 0.95, inten + (0.5 - c_uv.y) * 0.3));
+    return sky_col;
 }
 vec3 ocean(vec2 uv,vec2 pos)
 {
@@ -71,7 +121,7 @@ vec3 card_color(vec2 aspect,vec2 uv)
         float black = edge.x*edge.y;
         vec3 c_col = vec3(0.0);
         if(i==0)
-            c_col = lava(uv,cen);
+            c_col = lava(uv,cen,card_half);
         else if(i==1)
             c_col = ocean(uv,cen);
         else if(i==2)
