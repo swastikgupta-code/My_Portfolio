@@ -140,6 +140,16 @@ vec3 lava(vec2 uv,vec2 pos,vec2 card_half)
     float fissure = smoothstep(0.05, 0.0, abs(c_uv.y - rock_profile + 0.04 * sin(c_uv.x * 12.0)));
     base_rock += vec3(1.0, 0.65, 0.1) * fissure * (0.6 + 0.4 * sin(time * 2.8 + c_uv.x * 9.0));
     scene_col = mix(scene_col, base_rock, rock_mask);
+    for (int i = 0; i < 16; i++) {
+        float fi = float(i);
+        vec2 spark_p;
+        spark_p.x = fract(fi * 0.163 + sin(fi * 27.3) * 0.25) * 2.0 - 1.0;
+        spark_p.x += 0.10 * sin(time * 2.5 + fi * 2.1);
+        spark_p.y = fract(fi * 0.217 + time * (0.22 + 0.06 * hash1(vec2(fi, 3.7)))) * 2.0 - 1.0;
+        float d_spark = length(c_uv - spark_p);
+        float spark = smoothstep(0.028, 0.0, d_spark);
+        scene_col += vec3(1.0, 0.75, 0.25) * spark * 1.4;
+    }
     return scene_col *card_mask;
 }
 vec3 ocean(vec2 uv,vec2 pos)
