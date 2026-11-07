@@ -89,14 +89,8 @@ float voronoi_cracks(vec2 p)
     }
     return sqrt(md);
 }
-vec3 lava(vec2 uv,vec2 pos,vec2 card_half)
+vec3 lava(vec2 c_uv)
 {
-    vec2 d = uv - pos;
-    vec2 dist = abs(d) - card_half;
-    float edge_dist = max(dist.x,dist.y);
-    float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
-    if(card_mask<=0.0) return vec3(0.0);
-    vec2 c_uv = d/card_half;
     vec2 flame_uv = c_uv * vec2(1.8,1.2);
     flame_uv.y -= time*0.75;
     flame_uv.x += sin(c_uv.y*3.5+ time*1.6) * 0.18;
@@ -150,15 +144,10 @@ vec3 lava(vec2 uv,vec2 pos,vec2 card_half)
         float spark = smoothstep(0.028, 0.0, d_spark);
         scene_col += vec3(1.0, 0.75, 0.25) * spark * 1.4;
     }
-    return scene_col *card_mask;
+    return scene_col;
 }
-vec3 ocean(vec2 uv, vec2 pos, vec2 card_half) {
-    vec2 d = uv - pos;
-    vec2 dist = abs(d) - card_half;
-    float edge_dist = max(dist.x,dist.y);
-    float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
-    if(card_mask<=0.0) return vec3(0.0);
-    vec2 c_uv = d/card_half;
+vec3 ocean(vec2 c_uv) 
+{
     vec3 deep_space   = vec3(0.01, 0.03, 0.10);
     vec3 horizon = vec3(0.08, 0.32, 0.48);
     vec3 moon= vec3(0.75, 0.92, 1.00);
@@ -181,24 +170,12 @@ vec3 ocean(vec2 uv, vec2 pos, vec2 card_half) {
     }
     return sky_col;
 }
-vec3 nature(vec2 uv,vec2 pos,vec2 card_half)
+vec3 nature(vec2 c_uv)
 {
-    vec2 d = uv - pos;
-    vec2 dist = abs(d) - card_half;
-    float edge_dist = max(dist.x,dist.y);
-    float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
-    if(card_mask<=0.0) return vec3(0.0);
-    vec2 c_uv = d/card_half;
     return vec3(0.0,1.0,0.0);
 }
-vec3 lightning(vec2 uv,vec2 pos,vec2 card_half)
+vec3 lightning(vec2 c_uv)
 {
-    vec2 d = uv - pos;
-    vec2 dist = abs(d) - card_half;
-    float edge_dist = max(dist.x,dist.y);
-    float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
-    if(card_mask<=0.0) return vec3(0.0);
-    vec2 c_uv = d/card_half;
     return vec3(1.0,1.0,0.0);
 }
 vec3 card_color(vec2 aspect,vec2 uv)
@@ -208,22 +185,23 @@ vec3 card_color(vec2 aspect,vec2 uv)
     vec2 gap = vec2(0.6,0.0);
     vec3 col = vec3(0.0);
     for(int i = 0;i<4;i++) {
-        vec2 cen = c1_center + gap*float(i);
-        vec2 p = uv - cen;
-        vec2 d= abs(p)-card_half;
-        float border = 0.005;
-        vec2 edge = smoothstep(vec2(border),vec2(-border),d);
-        float black = edge.x*edge.y;
+        vec2 pos = c1_center + gap*float(i);
+        vec2 d = uv - pos;
+        vec2 dist = abs(d) - card_half;
+        float edge_dist = max(dist.x,dist.y);
+        float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
+        if(card_mask<=0.0) return vec3(0.0);
+        vec2 c_uv = d/card_half;
         vec3 c_col = vec3(0.0);
         if(i==0)
-            c_col = lava(uv,cen,card_half);
+            c_col = lava(c_uv);
         else if(i==1)
-            c_col = ocean(uv,cen,card_half);
+            c_col = ocean(c_uv);
         else if(i==2)
-            c_col = nature(uv,cen,card_half);
+            c_col = nature(c_uv);
         else if(i==3)
-            c_col = lightning(uv,cen,card_half);
-        c_col *= black;
+            c_col = lightning(c_uv);
+        c_col = c_col * card_mask;
         col += c_col;
     }
     return col;
