@@ -168,7 +168,35 @@ vec3 ocean(vec2 c_uv)
         float star_twinkle = 0.5 + 0.5 * sin(time * 3.0 + fi * 4.0);
         sky_col += vec3(0.85, 0.95, 1.0) * smoothstep(0.015, 0.0, star_dist) * star_twinkle;
     }
-    return sky_col;
+    float sea_level = 0.2;
+    float wave_height = 0.0;
+    wave_height += 0.035 * sin(c_uv.x*6.0 + time*1.4);
+    wave_height += 0.02 * sin(c_uv.x*13.0 + time*2.3);
+    wave_height += 0.01 * sin(c_uv.x*23.0 - time*3.7);
+    wave_height += 0.006 * noise(vec2(c_uv.x*30.0,time));
+    float curr_height = sea_level + wave_height;
+    float water_mask = smoothstep(-0.015,0.015,c_uv.y-curr_height);
+    vec3 water_deep = vec3(0.01, 0.08, 0.22);
+    vec3 water_shallow = vec3(0.04, 0.48, 0.58);
+    vec3 water_surface = vec3(0.20, 0.82, 0.85);
+    vec3 moon_white = vec3(0.92, 0.98, 1.00);
+    float depth = clamp((c_uv.y-curr_height)/0.9,0.0,1.0);
+    vec3 water_col = mix(water_shallow,water_deep,pow(depth,0.7));
+    float moon_light = exp(-pow(abs(c_uv.x - moon_pos.x) * 2.8, 2.0));
+    water_col += water_surface * moon_light * (1.0 - depth * 0.7) * 0.45;
+    vec2 water_uv = c_uv * vec2(4.0,6.0);
+    water_uv.y += time * 0.15;
+    vec2 water_warp = vec2(
+        fbm(water_uv + vec2(0.0, time * 0.2)),
+        fbm(water_uv + vec2(4.1, -time * 0.15))
+    );
+    float light_thread = fbm(water_uv + water_warp * 1.8);
+    water_col += water_surface * smoothstep(0.52, 0.80, light_thread) * (1.0 - depth * 0.6) * 0.35;
+    float crest_dist = abs(c_uv.y - curr_height);
+    float foam = smoothstep(0.025, 0.0, crest_dist) * (0.6 + 0.4 * noise(vec2(c_uv.x * 20.0, time * 4.0)));
+    water_col = mix(water_col, moon_white, foam);
+    vec3 scene_col = mix(water_col,sky_col,water_mask);
+    return scene_col;
 }
 vec3 nature(vec2 c_uv)
 {
@@ -190,7 +218,7 @@ vec3 card_color(vec2 aspect,vec2 uv)
         vec2 dist = abs(d) - card_half;
         float edge_dist = max(dist.x,dist.y);
         float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
-        if(card_mask<=0.0) return vec3(0.0);
+        if(card_mask<=0.0) continue;
         vec2 c_uv = d/card_half;
         vec3 c_col = vec3(0.0);
         if(i==0)
