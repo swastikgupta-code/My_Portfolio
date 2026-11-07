@@ -1,4 +1,4 @@
-precision mediump float;
+precision highp float;
 uniform vec2 res;
 uniform vec2 u_mouse;
 uniform float time;
@@ -45,9 +45,8 @@ float hash1(vec2 p) {
     return fract(sin(g)*43758.5453123);
 }
 vec2 hash2(vec2 p) {
-    p = vec2(dot(p, vec2(127.1, 311.7)),
-             dot(p, vec2(269.5, 183.3)));
-    return fract(sin(p) * 43758.5453123);
+    p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+    return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
 }
 float noise(vec2 p)
 {
@@ -60,7 +59,8 @@ float noise(vec2 p)
     float d = dot(hash2(i+vec2(0.0,1.0)),f-vec2(0.0,1.0));
     return mix(mix(a,b,u.x),mix(c,d,u.x),u.y) + 0.5;
 }
-float brownian(vec2 p){
+
+float fbm(vec2 p){
     float v = 0.0;
     float a = 0.5;
     for(int i = 0;i<4;i++)
@@ -101,10 +101,10 @@ vec3 lava(vec2 uv,vec2 pos,vec2 card_half)
     flame_uv.y -= time*0.75;
     flame_uv.x += sin(c_uv.y*3.5+ time*1.6) * 0.18;
     vec2 flame_turb = vec2(
-        brownian(flame_uv),
-        brownian(flame_uv + vec2(4.3,1.7))
+        fbm(flame_uv),
+        fbm(flame_uv + vec2(4.3,1.7))
     );
-    float inten = brownian(flame_uv + flame_turb *2.0);
+    float inten = fbm(flame_uv + flame_turb *2.0);
     vec3 dark_crimson = vec3(0.28, 0.03, 0.01);
     vec3 crimson = vec3(0.82, 0.12, 0.01);
     vec3 orange = vec3(1.0,  0.48, 0.02);
@@ -117,7 +117,7 @@ vec3 lava(vec2 uv,vec2 pos,vec2 card_half)
     float lava_level = -0.22 + 0.04 * sin(c_uv.x*4.5 + time * 1.8);
     float laval_region = smoothstep(0.04,-0.04,c_uv.y-lava_level);
     vec2 lava_uv = vec2(c_uv.x * 3.2, (c_uv.y - lava_level) * 6.5);;
-    lava_uv += 0.25 * vec2(brownian(lava_uv + time * 0.3), brownian(lava_uv + vec2(3.1, time * 0.2)));
+    lava_uv += 0.25 * vec2(fbm(lava_uv + time * 0.3), fbm(lava_uv + vec2(3.1, time * 0.2)));
     float cracks = voronoi_cracks(lava_uv + vec2(sin(time * 0.4), time * 0.15));;
     vec3 molten_core = vec3(1.0, 0.92, 0.45);
     vec3 molten_body = vec3(1.0, 0.36, 0.02);
@@ -133,7 +133,7 @@ vec3 lava(vec2 uv,vec2 pos,vec2 card_half)
     rock_profile += 0.07 * noise(vec2(c_uv.x * 14.0, 0.0));
     rock_profile += 0.30 * pow(abs(c_uv.x), 2.2);
     float rock_mask = smoothstep(0.02, -0.02, c_uv.y - rock_profile);
-    float rock_fbm = brownian(c_uv * 8.0);
+    float rock_fbm = fbm(c_uv * 8.0);
     vec3 base_rock = mix(vec3(0.18, 0.04, 0.02), vec3(0.32, 0.08, 0.03), rock_fbm);
     float ridge_glow = smoothstep(0.09, 0.0, abs(c_uv.y - rock_profile));
     base_rock += vec3(1.0, 0.35, 0.02) * ridge_glow * 1.1;
@@ -152,16 +152,53 @@ vec3 lava(vec2 uv,vec2 pos,vec2 card_half)
     }
     return scene_col *card_mask;
 }
-vec3 ocean(vec2 uv,vec2 pos)
-{
-    return vec3(0,0.2,1.0);
+vec3 ocean(vec2 uv, vec2 pos, vec2 card_half) {
+    vec2 d = uv - pos;
+    vec2 dist = abs(d) - card_half;
+    float edge_dist = max(dist.x,dist.y);
+    float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
+    if(card_mask<=0.0) return vec3(0.0);
+    vec2 c_uv = d/card_half;
+    vec3 deep_space   = vec3(0.01, 0.03, 0.10);
+    vec3 horizon = vec3(0.08, 0.32, 0.48);
+    vec3 moon= vec3(0.75, 0.92, 1.00);
+    float sky_grad = clamp((c_uv.y - 0.20) / 0.80, 0.0, 1.0);
+    vec3 sky_col = mix(horizon, deep_space, pow(sky_grad, 0.6));
+    vec2 moon_pos = vec2(0.35, 0.65);
+    float moon_dist = length(c_uv - moon_pos);
+    float moon_core = smoothstep(0.12, 0.0, moon_dist);
+    float moon_outer = smoothstep(0.65, 0.0, moon_dist) * 0.4;
+    sky_col += moon * (moon_core + moon_outer);
+    for (int i = 0; i < 14; i++) {
+        float fi = float(i);
+        vec2 star_p = vec2(
+            fract(fi * 0.187 + 0.12) * 2.0 - 1.0,
+            fract(fi * 0.313 + 0.45) * 0.8 + 0.2
+        );
+        float star_dist = length(c_uv - star_p);
+        float star_twinkle = 0.5 + 0.5 * sin(time * 3.0 + fi * 4.0);
+        sky_col += vec3(0.85, 0.95, 1.0) * smoothstep(0.015, 0.0, star_dist) * star_twinkle;
+    }
+    return sky_col;
 }
-vec3 nature(vec2 uv,vec2 pos)
+vec3 nature(vec2 uv,vec2 pos,vec2 card_half)
 {
-    return vec3(0.1,1.0,0.3);
+    vec2 d = uv - pos;
+    vec2 dist = abs(d) - card_half;
+    float edge_dist = max(dist.x,dist.y);
+    float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
+    if(card_mask<=0.0) return vec3(0.0);
+    vec2 c_uv = d/card_half;
+    return vec3(0.0,1.0,0.0);
 }
-vec3 lightning(vec2 uv,vec2 pos)
+vec3 lightning(vec2 uv,vec2 pos,vec2 card_half)
 {
+    vec2 d = uv - pos;
+    vec2 dist = abs(d) - card_half;
+    float edge_dist = max(dist.x,dist.y);
+    float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
+    if(card_mask<=0.0) return vec3(0.0);
+    vec2 c_uv = d/card_half;
     return vec3(1.0,1.0,0.0);
 }
 vec3 card_color(vec2 aspect,vec2 uv)
@@ -181,11 +218,11 @@ vec3 card_color(vec2 aspect,vec2 uv)
         if(i==0)
             c_col = lava(uv,cen,card_half);
         else if(i==1)
-            c_col = ocean(uv,cen);
+            c_col = ocean(uv,cen,card_half);
         else if(i==2)
-            c_col = nature(uv,cen);
+            c_col = nature(uv,cen,card_half);
         else if(i==3)
-            c_col = lightning(uv,cen);
+            c_col = lightning(uv,cen,card_half);
         c_col *= black;
         col += c_col;
     }
