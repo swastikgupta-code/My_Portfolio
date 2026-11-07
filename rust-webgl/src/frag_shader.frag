@@ -196,6 +196,38 @@ vec3 ocean(vec2 c_uv)
     float foam = smoothstep(0.025, 0.0, crest_dist) * (0.6 + 0.4 * noise(vec2(c_uv.x * 20.0, time * 4.0)));
     water_col = mix(water_col, moon_white, foam);
     vec3 scene_col = mix(water_col,sky_col,water_mask);
+    float seabed_profile = -0.72;
+    seabed_profile += 0.14 * sin(c_uv.x * 3.2 - 0.5);
+    seabed_profile += 0.08 * sin(c_uv.x * 8.0 + 1.1);
+    seabed_profile += 0.05 * noise(vec2(c_uv.x * 12.0, 0.0));
+    seabed_profile += 0.28 * pow(abs(c_uv.x), 2.2);
+    float bed_mask = smoothstep(-0.02, 0.02, c_uv.y - seabed_profile);
+    float bed_fbm = fbm(c_uv *9.0);
+    vec3 reef_dark  = vec3(0.02, 0.07, 0.12);
+    vec3 reef_sand  = vec3(0.12, 0.22, 0.25);
+    vec3 seabed_col = mix(reef_dark, reef_sand, bed_fbm);
+    float ridge_glow = smoothstep(0.08, 0.0, abs(c_uv.y - seabed_profile));
+    vec3 ridge_glow_col = vec3(0.10, 0.85, 0.65);
+    float glow_pulse = 0.6 + 0.4 * sin(time * 2.0 + c_uv.x * 6.0);
+    seabed_col += ridge_glow_col * ridge_glow * glow_pulse * 0.75;
+    scene_col = mix(seabed_col,scene_col,bed_mask);
+    for(int i = 0;i<=14;i++)
+    {
+        float fi = float(i);
+        vec2 bubble_pos = vec2(
+            fract(fi * 0.187 + sin(fi * 18.2)*0.2) * 1.8 - 0.9,
+            fract(fi * 0.313 + time * (0.18 + 0.05 * hash1(vec2(fi,7.3)))) * 1.1 - 0.9
+        );
+        bubble_pos.x += 0.04 * sin(time*2.8 + fi *1.7);
+        if(bubble_pos.y<curr_height)
+        {
+            vec3 bubble_col = vec3(0.7, 0.95, 1.0);
+            float bubble_dist = length(bubble_pos-c_uv);
+            float bubble_outer = smoothstep(0.022,0.016,bubble_dist) - smoothstep(0.016,0.008,bubble_dist);
+            float bubble_inner = smoothstep(0.009,0.0,bubble_dist);
+            scene_col += bubble_col * (bubble_outer+bubble_inner) * 1.3;
+        }
+    }
     return scene_col;
 }
 vec3 nature(vec2 c_uv)
