@@ -51,6 +51,33 @@ body {
     display: inline-block;
     width: 0.35em;
 }
+.invi_button {
+    position: absolute;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 0;
+    pointer-events: auto;
+}
+#lava {
+    top: 30.2vh;
+    left: 24.8vw;
+    width: 11.3vw;
+    height: 34vh;
+}
+#ocean {
+    top: 30.2vh;
+    left: 43.8vw;
+    width: 11.3vw;
+    height: 34vh;
+}
+#nature {
+    top: 30.2vh;
+    left: 62.8vw;
+    width: 11.3vw;
+    height: 34vh;
+}
 @keyframes revealLetters {
     0% {
         opacity: 0;

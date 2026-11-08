@@ -3,6 +3,7 @@ uniform vec2 res;
 uniform vec2 u_mouse;
 uniform float time;
 uniform float eye_height;
+uniform int mode;
 varying vec2 v_uv;
 #define MAX_CARDS 4
 
@@ -331,8 +332,27 @@ void main()
     vec3 e_col = left_col + right_col;
     float e_black = smoothstep(1.8,0.4,length(v_uv));
     e_col *= e_black;
-    int number_of_cards = 3;
-    vec3 c_col = card_color(aspect,uv,number_of_cards);
-    vec3 col = e_col + c_col;
+    vec3 col = e_col;
+    if(mode==0)
+    {
+        int number_of_cards = 3;
+        vec3 c_col = card_color(aspect,uv,number_of_cards);
+        col = e_col + c_col;
+    }
+    else if(mode==1)
+    {
+        vec3 bg_col = lava(uv);
+        col += bg_col;
+    }
+    else if(mode==2)
+    {
+        vec3 bg_col = ocean(uv);
+        col += bg_col;
+    }
+    else if(mode==3)
+    {
+        vec3 bg_col = nature(uv);
+        col += bg_col;
+    }
     gl_FragColor = vec4(col,1.0);
 }

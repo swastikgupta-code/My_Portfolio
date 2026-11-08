@@ -25,6 +25,7 @@ pub fn start()-> Result<(),JsValue> {
 
     let width = window.inner_width()?.as_f64().unwrap_or(1920.0) as u32;
     let height = window.inner_height()?.as_f64().unwrap_or(1080.0) as u32;
+    let mode: i32 = 0;
     canvas.set_width(width);
     canvas.set_height(height);
     context.viewport(0, 0, width as i32, height as i32);
@@ -52,6 +53,7 @@ pub fn start()-> Result<(),JsValue> {
     let mos_loc = context.get_uniform_location(&program,"u_mouse");
     let time_loc = context.get_uniform_location(&program, "time");
     let eye_height_loc = context.get_uniform_location(&program, "eye_height");
+    let mode_loc = context.get_uniform_location(&program, "mode");
 
     let mouse_pos  = Rc::new(RefCell::new((0.0f32,0.0f32)));
     {
@@ -111,6 +113,7 @@ pub fn start()-> Result<(),JsValue> {
             context.uniform2f(mos_loc.as_ref(), mx,my);
             context.uniform1f(time_loc.as_ref(),time);
             context.uniform1f(eye_height_loc.as_ref(),eye_height);
+            context.uniform1i(mode_loc.as_ref(),mode);
             context.draw_arrays(GL::TRIANGLES, 0, 6);
             web_sys::window()
                 .unwrap()
