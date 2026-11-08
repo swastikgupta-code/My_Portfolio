@@ -232,7 +232,17 @@ vec3 ocean(vec2 c_uv)
 }
 vec3 nature(vec2 c_uv)
 {
-    return vec3(0.0,1.0,0.0);
+    vec3 sky_colour = vec3(0.06,0.18,0.14);
+    vec3 horizon_colour = vec3(0.92,0.72,0.38);
+    vec3 sun_colour = vec3(1.0,0.9,0.6);
+    float sky_gradient = clamp((c_uv.y + 0.1)*0.7,0.0,1.0);
+    vec3 sky_col = mix(horizon_colour,sky_colour,sky_gradient);
+    vec2 sun_pos = vec2(0.4,0.6);
+    float sun_dis = length(c_uv-sun_pos);
+    float sun_core = smoothstep(0.13,0.0,sun_dis);
+    float sun_outer = smoothstep(0.6,0.0,sun_dis) * 0.5;
+    sky_col += sun_colour * (sun_core + sun_outer);
+    return sky_col;
 }
 vec3 lightning(vec2 c_uv)
 {
