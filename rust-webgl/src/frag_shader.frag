@@ -4,7 +4,7 @@ uniform vec2 u_mouse;
 uniform float time;
 uniform float eye_height;
 varying vec2 v_uv;
-
+#define MAX_CARDS 4
 
 float sd_ellipse(vec2 p,vec2 rad)
 {
@@ -287,13 +287,14 @@ vec3 lightning(vec2 c_uv)
 {
     return vec3(1.0,1.0,0.0);
 }
-vec3 card_color(vec2 aspect,vec2 uv)
+vec3 card_color(vec2 aspect,vec2 uv,int num)
 {
-    vec2 c1_center = vec2(-0.55*aspect.x,-0.4);
-    vec2 card_half = vec2(0.18,0.35);
-    vec2 gap = vec2(0.6,0.0);
+    vec2 c1_center = vec2(-0.13*aspect.x*float(num),-0.4);
+    vec2 card_half = vec2(0.72/float(num),0.35);
+    vec2 gap = vec2(2.4,0.0)/float(num);
     vec3 col = vec3(0.0);
-    for(int i = 0;i<4;i++) {
+    for(int i = 0;i<MAX_CARDS;i++) {
+        if(i>=num) break;
         vec2 pos = c1_center + gap*float(i);
         vec2 d = uv - pos;
         vec2 dist = abs(d) - card_half;
@@ -330,7 +331,8 @@ void main()
     vec3 e_col = left_col + right_col;
     float e_black = smoothstep(1.8,0.4,length(v_uv));
     e_col *= e_black;
-    vec3 c_col = card_color(aspect,uv);
+    int number_of_cards = 3;
+    vec3 c_col = card_color(aspect,uv,number_of_cards);
     vec3 col = e_col + c_col;
     gl_FragColor = vec4(col,1.0);
 }
