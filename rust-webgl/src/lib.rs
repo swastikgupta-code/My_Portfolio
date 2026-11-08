@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{window,HtmlButtonElement,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
+use web_sys::{window,Element,HtmlButtonElement,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
 #[wasm_bindgen]
 pub fn start()-> Result<(),JsValue> {
     let window = window().expect("unable to create window");
@@ -66,8 +66,26 @@ pub fn start()-> Result<(),JsValue> {
         {
             let button = elem.dyn_into::<HtmlButtonElement>()?;
             let mode_clone = Rc::clone(&mode);
+            let doc_clone = document.clone();
             let btn_callback = Closure::wrap(Box::new(move || {
                 *mode_clone.borrow_mut() = btn_mode;
+                if let Some(container) = doc_clone.get_element_by_id("main_container")
+                {
+                    if let Ok(spans) = container.query_selector_all("span")
+                    {
+                        let length = spans.length();
+                        for i in 0..length
+                        {
+                            if let Some(span) = spans.get(i)
+                            {
+                                if let Ok(element) = span.dyn_into::<Element>()
+                                {
+                                    element.remove();
+                                }
+                            }
+                        }
+                    }
+                }
             }) as Box<dyn FnMut()>);
             button.add_event_listener_with_callback("click", btn_callback.as_ref().unchecked_ref())?;
             btn_callback.forget();
