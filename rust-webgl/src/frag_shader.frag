@@ -270,9 +270,10 @@ vec3 nature(vec2 c_uv)
     {
         float fi = float(i);
         vec2 insect_pos = vec2(
-            fract(fi*3.42 + c_uv.x*2.032)*2.0-1.0,
-            fract(fi*5.72 + c_uv.x * 2.304 + time * 0.044)*1.4-0.7
+            fract(fi*hash1(vec2(fi*2.34,0.23)) +2.02)*2.0-1.0,
+            fract(fi*hash1(vec2(fi*1.23,1.21)) + time * 0.044)*1.7-0.7
         );
+        insect_pos.x += sin(time*0.8+fi*22.032+0.23) * 0.1;
         float dis = length(insect_pos-c_uv);
         vec3 insect_colour = vec3(0.93, 0.93, 0.56);
         float insect_core = smoothstep(0.02,0.0,dis);
