@@ -1,8 +1,9 @@
+use std::cell::Ref;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{window,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
+use web_sys::{window,HtmlButtonElement,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
 #[wasm_bindgen]
 pub fn start()-> Result<(),JsValue> {
     let window = window().expect("unable to create window");
@@ -25,7 +26,6 @@ pub fn start()-> Result<(),JsValue> {
 
     let width = window.inner_width()?.as_f64().unwrap_or(1920.0) as u32;
     let height = window.inner_height()?.as_f64().unwrap_or(1080.0) as u32;
-    let mode: i32 = 0;
     canvas.set_width(width);
     canvas.set_height(height);
     context.viewport(0, 0, width as i32, height as i32);
@@ -54,7 +54,25 @@ pub fn start()-> Result<(),JsValue> {
     let time_loc = context.get_uniform_location(&program, "time");
     let eye_height_loc = context.get_uniform_location(&program, "eye_height");
     let mode_loc = context.get_uniform_location(&program, "mode");
-
+    let mode = Rc::new(RefCell::new(0i32));
+    let buttons = [
+        ("lava",1),
+        ("ocean",2),
+        ("nature",3)
+    ];
+    for (id,btn_mode) in buttons
+    {
+        if let Some(elem) = document.get_element_by_id(id)
+        {
+            let button = elem.dyn_into::<HtmlButtonElement>()?;
+            let mode_clone = Rc::clone(&mode);
+            let btn_callback = Closure::wrap(Box::new(move || {
+                *mode_clone.borrow_mut() = btn_mode;
+            }) as Box<dyn FnMut()>);
+            button.add_event_listener_with_callback("click", btn_callback.as_ref().unchecked_ref())?;
+            btn_callback.forget();
+        }
+    }
     let mouse_pos  = Rc::new(RefCell::new((0.0f32,0.0f32)));
     {
         let mouse_pos = mouse_pos.clone();
@@ -113,7 +131,8 @@ pub fn start()-> Result<(),JsValue> {
             context.uniform2f(mos_loc.as_ref(), mx,my);
             context.uniform1f(time_loc.as_ref(),time);
             context.uniform1f(eye_height_loc.as_ref(),eye_height);
-            context.uniform1i(mode_loc.as_ref(),mode);
+            let current_mode:i32 = *mode.borrow();
+            context.uniform1i(mode_loc.as_ref(),current_mode);
             context.draw_arrays(GL::TRIANGLES, 0, 6);
             web_sys::window()
                 .unwrap()
