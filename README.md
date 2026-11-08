@@ -1,7 +1,9 @@
 # Swastik's Showcase
 This is my personal website to demostrate my projects and skills. Currently it only contains basic welcome text and shaders for background because this was my first time learning shaders and there were so facinating i gave all my time to studying and improving them.
-# How to Play
-go to 
+### Note: ### 
+This website is not made for please use it only on a laptop screen (1920 * 1080 resolution).
+# How to Run
+go to https://swastikgupta-code.github.io/My_Portfolio/ and the website will run for controls see the section below
 # Controls
 You just need to click at any world to enter it and the buttons do not disappear even after clicking so you can again click on those positions to enter another world
 # Motivation
