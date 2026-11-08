@@ -3,7 +3,7 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{window,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
-#[wasm_bindgen(start)]
+#[wasm_bindgen]
 pub fn start()-> Result<(),JsValue> {
     let window = window().expect("unable to create window");
     let document = window.document().expect("unable to create document");

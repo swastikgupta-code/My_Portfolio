@@ -8,6 +8,7 @@ body {
     display: flex;
     align-items: flex-start;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: black;
 }
 #glcanvas {
     border: 0;
