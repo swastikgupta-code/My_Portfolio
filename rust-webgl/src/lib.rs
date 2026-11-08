@@ -16,8 +16,8 @@ pub fn start()-> Result<(),JsValue> {
 
     context.viewport(0, 0, canvas.width() as i32, canvas.height() as i32);
 
-    let vert_shader_src = include_str!("vert_shader.vert");
-    let frag_shader_src = include_str!("frag_shader.frag");
+    let vert_shader_src = include_str!("./vert_shader.vert");
+    let frag_shader_src = include_str!("./frag_shader.frag");
 
     let vert_shader = compile_shader(&context, GL::VERTEX_SHADER, vert_shader_src)?;
     let frag_shader = compile_shader(&context, GL::FRAGMENT_SHADER, frag_shader_src)?;
