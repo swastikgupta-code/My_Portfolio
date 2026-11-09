@@ -1,6 +1,4 @@
-use std::cell::Ref;
 use std::cell::RefCell;
-use std::ops::Rem;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -101,6 +99,66 @@ pub fn start()-> Result<(),JsValue> {
                         let _ = about_container.style().set_property("visibility","visible");
                         let _ = about_container.style().set_property("display","block");
                     }
+                }
+                match id 
+                {
+                    "lava" => {
+                        if let Some(lava) = doc_clone.get_element_by_id("lava")
+                        {
+                            if let Ok(lava_btn) = lava.dyn_into::<HtmlButtonElement>()
+                            {
+                                lava_btn.set_disabled(true);
+                            }
+                        }
+                        if let Some(ocean) = doc_clone.get_element_by_id("ocean")
+                        {
+                            if let Ok(ocean_btn) = ocean.dyn_into::<HtmlButtonElement>()
+                            {
+                                ocean_btn.set_disabled(false);
+                            }
+                        }
+                    }
+                    "ocean" => {
+                        if let Some(ocean) = doc_clone.get_element_by_id("ocean")
+                        {
+                            if let Ok(ocean_btn) = ocean.dyn_into::<HtmlButtonElement>()
+                            {
+                                ocean_btn.set_disabled(true);
+                            }
+                        }
+                        if let Some(lava) = doc_clone.get_element_by_id("lava")
+                        {
+                            if let Ok(lava_btn) = lava.dyn_into::<HtmlButtonElement>()
+                            {
+                                lava_btn.set_disabled(false);
+                            }
+                        }
+                        if let Some(nature) = doc_clone.get_element_by_id("nature")
+                        {
+                            if let Ok(nature_btn) = nature.dyn_into::<HtmlButtonElement>()
+                            {
+                                nature_btn.set_disabled(false);
+                            }
+                        }
+
+                    }
+                    "nature" => {
+                        if let Some(nature) = doc_clone.get_element_by_id("nature")
+                        {
+                            if let Ok(nature_btn) = nature.dyn_into::<HtmlButtonElement>()
+                            {
+                                nature_btn.set_disabled(true);
+                            }
+                        }
+                        if let Some(ocean) = doc_clone.get_element_by_id("ocean")
+                        {
+                            if let Ok(ocean_btn) = ocean.dyn_into::<HtmlButtonElement>()
+                            {
+                                ocean_btn.set_disabled(false);
+                            }
+                        }
+                    }
+                    _ => {}
                 }
             }) as Box<dyn FnMut()>);
             button.add_event_listener_with_callback("click", btn_callback.as_ref().unchecked_ref())?;

@@ -41,9 +41,10 @@ body {
 #about_container {
     display: none;
     visibility: hidden;
-    opacity: 0.3;
+    opacity: 0.5;
     background-color: white;
     color: #8b72bd;
+    width: 80%;
 }
 .letter {
     display:inline-block;
