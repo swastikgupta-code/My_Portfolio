@@ -288,80 +288,49 @@ vec3 ocean(vec2 c_uv)
     }
     return scene_col;
 }
-vec3 nature(vec2 c_uv)
-{
-    vec3 sky_colour = vec3(0.06,0.18,0.14);
-    vec3 horizon_colour = vec3(0.92,0.72,0.38);
-    vec3 sun_colour = vec3(1.0, 0.9, 0.6);
-    float sky_gradient = clamp((c_uv.y + 0.1)*0.7,0.0,1.0);
-    vec3 sky_col = mix(horizon_colour,sky_colour,sky_gradient);
-    vec2 sun_pos = vec2(
-        1.7*cos(mod(time*0.2,3.14)),
-        abs(0.72*sin(time*0.2)+0.2)-0.2
-    );
-    float sun_dis = length(c_uv-sun_pos);
-    float sun_core = smoothstep(0.13,0.0,sun_dis);
-    float sun_outer = smoothstep(0.6,0.0,sun_dis) * 0.5;
-    sky_col += sun_colour * (sun_core + sun_outer);
-    vec3 mountain_colour = vec3(0.55, 0.41, 0.04);
-    vec3 mountain_colour_2 = vec3(0.79, 0.52, 0.06);
-    vec3 mountain_colour_outer = vec3(1.0, 0.95, 0.6);
-    float mountain_profile = 0.3;
-    mountain_profile += 0.25 * sin(c_uv.x * 4.0 - 0.4) - 0.4;
-    mountain_profile += 0.05 * sin(c_uv.x * 7.0 + 1.9) - 0.1;
-    mountain_profile += 0.02 * sin(c_uv.x * 13.0 + 3.7) - 0.005;
-    mountain_profile += 0.01 * noise(vec2(c_uv.x+2.3,0.3));
-    float mountain_mask = smoothstep(-0.015,0.015,mountain_profile-c_uv.y);
-    float mountain_fbm = fbm(c_uv*8.0);
-    vec3 mountain_col = mix(mountain_colour,mountain_colour_2,mountain_fbm);
-    mountain_col += mountain_colour_outer * exp(-27.0*pow(abs(c_uv.y-mountain_profile),1.3)) * 0.4;
-    vec3 scene_col = mix(sky_col,mountain_col,mountain_mask);
-    vec3 grass_colour = vec3(0.03, 0.5, 0.33);
-    vec3 grass_colour_2 = vec3(0.04, 0.71, 0.08);
-    float grass_profile = 0.0;
-    grass_profile += 0.1 * sin(c_uv.x * 7.0 - 0.4) - 0.15;
-    grass_profile += 0.05 * sin(c_uv.x * 9.0 + 1.9) - 0.5;
-    grass_profile += 0.02 * sin(c_uv.x * 13.0 + 3.7) - 0.03;
-    grass_profile += 0.01 * noise(vec2(c_uv.x+2.3,0.3));
-    float grass_mask = smoothstep(-0.015,0.015,grass_profile-c_uv.y);
-    float grass_fbm = fbm(c_uv*8.0);
-    vec3 grass_col = mix(grass_colour,grass_colour_2,grass_fbm);
-    scene_col = mix(scene_col,grass_col,grass_mask);
-    for(int i = 0;i < 14;i++)
-    {
-        float fi = float(i);
-        vec2 insect_pos = vec2(
-            fract(fi*hash1(vec2(fi*2.34,0.23)) +2.02)*2.0-1.0,
-            fract(fi*hash1(vec2(fi*1.23,1.21)) + time * 0.044)*1.7-0.7
-        );
-        insect_pos.x += sin(time*0.8+fi*22.032+0.23) * 0.1;
-        float dis = length(insect_pos-c_uv);
-        vec3 insect_colour = vec3(0.93, 0.93, 0.56);
-        float insect_core = smoothstep(0.02,0.0,dis);
-        float insect_outer = smoothstep(0.06,0.0,dis) * 0.5;
-        vec3 insect_col = insect_colour * (insect_core + insect_outer);
-        scene_col += insect_col;
-    }
-    return scene_col;
-}
 vec3 nature(vec2 c_uv,float width)
 {
-    vec3 sky_colour = vec3(0.06,0.18,0.14);
-    vec3 horizon_colour = vec3(0.92,0.72,0.38);
-    vec3 sun_colour = vec3(1.0, 0.9, 0.6);
+    vec3 sky_colour_rise = vec3(0.09, 0.62, 0.67);
+    vec3 horizon_colour_rise = vec3(0.99, 0.93, 0.44);
+    vec3 sky_colour_noon = vec3(0.05, 0.86, 0.93);
+    vec3 horizon_colour_noon = vec3(1.0, 0.98, 0.72);
+    vec3 sky_colour_fall = vec3(0.93, 0.33, 0.05);
+    vec3 horizon_colour_fall = vec3(0.88, 0.55, 0.14);
+    vec3 sky_colour_night = vec3(0.01, 0.03, 0.10);
+    vec3 horizon_colour_night = vec3(0.06, 0.24, 0.55);
+    vec3 sun_colour = vec3(0.66, 0.6, 1.0);
+    vec3 moon_colour = vec3(0.75, 0.92, 1.00);
+    float angle = mod(time*0.2,6.28);
+    if(angle<0.0) angle += 6.28;
+    float t = 2.0*angle/3.14;
+    vec3 sky1 = mix(sky_colour_rise,sky_colour_noon,clamp(t,0.0,1.0));
+    vec3 sky2 = mix(sky1,sky_colour_fall,clamp(t-1.0,0.0,1.0));
+    vec3 sky3 = mix(sky2,sky_colour_night,clamp(t-2.0,0.0,1.0));
+    vec3 sky4 = mix(sky3,sky_colour_rise,clamp(t-3.0,0.0,1.0));  
+    vec3 horizon1 = mix(horizon_colour_rise,horizon_colour_noon,clamp(t,0.0,1.0));
+    vec3 horizon2 = mix(horizon1,horizon_colour_fall,clamp(t-1.0,0.0,1.0));
+    vec3 horizon3 = mix(horizon2,horizon_colour_night,clamp(t-2.0,0.0,1.0));
+    vec3 horizon4 = mix(horizon3,horizon_colour_rise,clamp(t-3.0,0.0,1.0)); 
     float sky_gradient = clamp((c_uv.y + 0.1)*0.7,0.0,1.0);
-    vec3 sky_col = mix(horizon_colour,sky_colour,sky_gradient);
+    vec3 sky_col = mix(horizon4,sky4,sky_gradient);
     vec2 sun_pos = vec2(
-        (width+0.1)*cos(mod(time*0.2,3.14)),
-        abs(0.72*sin(time*0.2)+0.2)-0.2
+        (width+0.2)*cos(mod(angle,3.14)),
+        abs(0.72*sin(angle))
     );
     float sun_dis = length(c_uv-sun_pos);
     float sun_core = smoothstep(0.13,0.0,sun_dis);
     float sun_outer = smoothstep(0.6,0.0,sun_dis) * 0.5;
-    sky_col += sun_colour * (sun_core + sun_outer);
+    if(sign(sin(time*0.2))>0.0)
+        sky_col += sun_colour * (sun_core + sun_outer);
+    else
+        sky_col += moon_colour * (sun_core + sun_outer);
     vec3 mountain_colour = vec3(0.55, 0.41, 0.04);
     vec3 mountain_colour_2 = vec3(0.79, 0.52, 0.06);
-    vec3 mountain_colour_outer = vec3(1.0, 0.95, 0.6);
+    vec3 mountain_colour_outer = sun_colour;
+    if(sign(sin(time*0.2))<0.0)
+    {
+        mountain_colour_outer = moon_colour;
+    }
     float mountain_profile = 0.3;
     mountain_profile += 0.25 * sin(c_uv.x * 4.0 - 0.4) - 0.4;
     mountain_profile += 0.05 * sin(c_uv.x * 7.0 + 1.9) - 0.1;
@@ -370,7 +339,7 @@ vec3 nature(vec2 c_uv,float width)
     float mountain_mask = smoothstep(-0.015,0.015,mountain_profile-c_uv.y);
     float mountain_fbm = fbm(c_uv*8.0);
     vec3 mountain_col = mix(mountain_colour,mountain_colour_2,mountain_fbm);
-    mountain_col += mountain_colour_outer * exp(-27.0*pow(abs(c_uv.y-mountain_profile),1.3)) * 0.4;
+    mountain_col += mountain_colour_outer * exp(-27.0*pow(abs(c_uv.y-mountain_profile),1.3)) * 0.7 * clamp((1.0 - 0.9*sun_dis),-0.1,1.0);
     vec3 scene_col = mix(sky_col,mountain_col,mountain_mask);
     vec3 grass_colour = vec3(0.03, 0.5, 0.33);
     vec3 grass_colour_2 = vec3(0.04, 0.71, 0.08);
@@ -425,7 +394,7 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
         else if(i==1)
             c_col = ocean(c_uv);
         else if(i==2)
-            c_col = nature(c_uv);
+            c_col = nature(c_uv,1.0);
         else if(i==3)
             c_col = lightning(c_uv);
         c_col = c_col * card_mask;
