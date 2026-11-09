@@ -6,7 +6,7 @@ uniform float eye_height;
 uniform int mode;
 varying vec2 v_uv;
 #define MAX_CARDS 4
-
+//reverted changes in the commit because that commit was for next version of this website which i am making for week 4 of terra so i am making it in different branch cause commiting it in this branch will cause the effect to show in the github pages aka my demo
 float sd_ellipse(vec2 p,vec2 rad)
 {
     float k1 = length(p/rad);
