@@ -40,11 +40,19 @@ function __wbg_get_imports() {
         __wbg_addEventListener_847fd86b8c33ec43: function() { return handleError(function (arg0, arg1, arg2, arg3) {
             arg0.addEventListener(getStringFromWasm0(arg1, arg2), arg3);
         }, arguments); },
+        __wbg_appendChild_dbf7ad2f48413560: function() { return handleError(function (arg0, arg1) {
+            const ret = arg0.appendChild(arg1);
+            return ret;
+        }, arguments); },
         __wbg_attachShader_817dcec9e79fd18f: function(arg0, arg1, arg2) {
             arg0.attachShader(arg1, arg2);
         },
         __wbg_bindBuffer_b3bb001fdbee089a: function(arg0, arg1, arg2) {
             arg0.bindBuffer(arg1 >>> 0, arg2);
+        },
+        __wbg_body_5f971cbc6950ca4f: function(arg0) {
+            const ret = arg0.body;
+            return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
         },
         __wbg_bufferData_2fb8740d60478bf0: function(arg0, arg1, arg2, arg3) {
             arg0.bufferData(arg1 >>> 0, arg2, arg3 >>> 0);
