@@ -29,7 +29,7 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
-#main_container {
+.containers {
     text-align: center;
     z-index: 10;
     position: relative;
@@ -37,6 +37,13 @@ body {
     display: flex;
     justify-content: center;
     margin-top: 23vh;
+}
+#about_container {
+    display: none;
+    visibility: hidden;
+    opacity: 0.3;
+    background-color: white;
+    color: #8b72bd;
 }
 .letter {
     display:inline-block;

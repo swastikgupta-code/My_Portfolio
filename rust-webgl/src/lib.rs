@@ -1,9 +1,10 @@
 use std::cell::Ref;
 use std::cell::RefCell;
+use std::ops::Rem;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{window,Element,HtmlButtonElement,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
+use web_sys::{window,HtmlElement,Element,HtmlButtonElement,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
 #[wasm_bindgen]
 pub fn start()-> Result<(),JsValue> {
     let window = window().expect("unable to create window");
@@ -84,6 +85,21 @@ pub fn start()-> Result<(),JsValue> {
                                 }
                             }
                         }
+                    }
+                }
+                if let Some(welcome) = doc_clone.get_element_by_id("welcome")
+                {
+                    if let Ok(element) = welcome.dyn_into::<Element>()
+                    {
+                        element.remove();
+                    }
+                }
+                if let Some(element) = doc_clone.get_element_by_id("about_container")
+                {
+                    if let Ok(about_container) = element.dyn_into::<HtmlElement>()
+                    {
+                        let _ = about_container.style().set_property("visibility","visible");
+                        let _ = about_container.style().set_property("display","block");
                     }
                 }
             }) as Box<dyn FnMut()>);

@@ -17,6 +17,8 @@ features = [
   "Document",
   "Element",
   "NodeList",
+  "HtmlElement",
+  "CssStyleDeclaration",
   "HtmlCanvasElement",
   "HtmlButtonElement",
   "WebGlRenderingContext",

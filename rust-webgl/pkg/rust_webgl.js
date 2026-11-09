@@ -172,6 +172,16 @@ function __wbg_get_imports() {
             const ret = result;
             return ret;
         },
+        __wbg_instanceof_HtmlElement_ea32ea7121e0a496: function(arg0) {
+            let result;
+            try {
+                result = arg0 instanceof HTMLElement;
+            } catch (_) {
+                result = false;
+            }
+            const ret = result;
+            return ret;
+        },
         __wbg_instanceof_WebGlRenderingContext_6e70e224f022d27a: function(arg0) {
             let result;
             try {
@@ -210,6 +220,9 @@ function __wbg_get_imports() {
             const ret = arg0.requestAnimationFrame(arg1);
             return ret;
         }, arguments); },
+        __wbg_setProperty_3fe74e09d53acb0b: function() { return handleError(function (arg0, arg1, arg2, arg3, arg4) {
+            arg0.setProperty(getStringFromWasm0(arg1, arg2), getStringFromWasm0(arg3, arg4));
+        }, arguments); },
         __wbg_set_height_ae0610d318c3428c: function(arg0, arg1) {
             arg0.height = arg1 >>> 0;
         },
@@ -235,6 +248,10 @@ function __wbg_get_imports() {
             const ret = typeof window === 'undefined' ? undefined : window;
             return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
         },
+        __wbg_style_f499e599ac70277f: function(arg0) {
+            const ret = arg0.style;
+            return ret;
+        },
         __wbg_uniform1f_0b36dc15cb2b4991: function(arg0, arg1, arg2) {
             arg0.uniform1f(arg1, arg2);
         },
@@ -259,7 +276,7 @@ function __wbg_get_imports() {
         },
         __wbindgen_generic_0000000000000001: function(arg0, arg1) {
             // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [NamedExternref("MouseEvent")], shim_idx: 1, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-            const ret = makeMutClosure(arg0, arg1, wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_aa20a479890ae5c7___features__gen_MouseEvent__MouseEvent______true_);
+            const ret = makeMutClosure(arg0, arg1, wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_9d82517219c15240___features__gen_MouseEvent__MouseEvent______true_);
             return ret;
         },
         __wbindgen_generic_0000000000000002: function(arg0, arg1) {
@@ -296,8 +313,8 @@ function wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke_______true
     wasm.wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke_______true_(arg0, arg1);
 }
 
-function wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_aa20a479890ae5c7___features__gen_MouseEvent__MouseEvent______true_(arg0, arg1, arg2) {
-    wasm.wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_aa20a479890ae5c7___features__gen_MouseEvent__MouseEvent______true_(arg0, arg1, arg2);
+function wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_9d82517219c15240___features__gen_MouseEvent__MouseEvent______true_(arg0, arg1, arg2) {
+    wasm.wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_9d82517219c15240___features__gen_MouseEvent__MouseEvent______true_(arg0, arg1, arg2);
 }
 
 function addToExternrefTable0(obj) {
