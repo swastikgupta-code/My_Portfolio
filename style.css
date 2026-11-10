@@ -13,7 +13,7 @@ body {
 #glcanvas {
     border: 0;
     display: block;
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -41,10 +41,10 @@ body {
 #about_container {
     display: none;
     visibility: hidden;
-    opacity: 0.5;
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.384);
     color: #8b72bd;
     width: 80%;
+    height: 200vh;
 }
 .letter {
     display:inline-block;
