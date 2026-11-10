@@ -47,7 +47,7 @@ body {
     height: 200vh;
     text-align: left;
 }
-#content {
+.content {
     display: flex;
 }
 #project_container h1{
@@ -57,14 +57,14 @@ body {
 #project_container h2{
     margin-bottom: 1.5rem;
 }
-#text_con {
+.text_con {
     flex: 1 1 60%;
     gap: 2rem;
 }
-#img_con {
+.img_con {
     flex: 1 1 40%;
 }
-#img_con img {
+.img_con img {
     width:90%;
 }
 .letter {
