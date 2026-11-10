@@ -3,7 +3,7 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::Document;
-use web_sys::{window,HtmlElement,Element,HtmlButtonElement,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
+use web_sys::{window,HtmlCollection,HtmlElement,Element,HtmlButtonElement,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
 #[wasm_bindgen]
 pub fn start()-> Result<(),JsValue> {
     let window = window().expect("unable to create window");
@@ -98,14 +98,6 @@ pub fn start()-> Result<(),JsValue> {
                         element.remove();
                     }
                 }
-                if let Some(element) = doc_clone.get_element_by_id("about_container")
-                {
-                    if let Ok(about_container) = element.dyn_into::<HtmlElement>()
-                    {
-                        let _ = about_container.style().set_property("visibility","visible");
-                        let _ = about_container.style().set_property("display","block");
-                    }
-                }
                 for &(id2,_mode2) in &buttons
                 {
                     if let Some(btn_ele) = doc_clone.get_element_by_id(id2)
@@ -138,6 +130,42 @@ pub fn start()-> Result<(),JsValue> {
                             make_button_right(ele_btn, doc_clone.clone(),btn_col[btn_mode as usize]);
                         }
                     }
+                }
+                let containers: HtmlCollection = doc_clone.get_elements_by_class_name("containers");
+                for i in 0..containers.length()
+                {
+                    if let Some(container) = containers.item(i)
+                    {
+                        if let Ok(cont) = container.dyn_into::<HtmlElement>()
+                        {
+                            let _ = cont.style().set_property("visibility", "hidden");
+                            let _ = cont.style().set_property("display", "none");
+                        }
+                    }
+                }
+                match id
+                {
+                    "lava" => {
+                        if let Some(element) = doc_clone.get_element_by_id("about_container")
+                        {
+                            if let Ok(about_container) = element.dyn_into::<HtmlElement>()
+                            {
+                                let _ = about_container.style().set_property("visibility","visible");
+                                let _ = about_container.style().set_property("display","block");
+                            }
+                        }
+                    }
+                    "ocean" => {
+                        if let Some(element) = doc_clone.get_element_by_id("project_container")
+                        {
+                            if let Ok(project_container) = element.dyn_into::<HtmlElement>()
+                            {
+                                let _ = project_container.style().set_property("visibility","visible");
+                                let _ = project_container.style().set_property("display","block");
+                            }
+                        }
+                    }
+                    _ => {}
                 }
             }) as Box<dyn FnMut()>);
             button.add_event_listener_with_callback("click", btn_callback.as_ref().unchecked_ref())?;

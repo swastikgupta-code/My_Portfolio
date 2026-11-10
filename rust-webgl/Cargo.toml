@@ -18,6 +18,7 @@ features = [
   "Element",
   "NodeList",
   "HtmlElement",
+  "HtmlCollection",
   "CssStyleDeclaration",
   "HtmlCanvasElement",
   "HtmlButtonElement",
