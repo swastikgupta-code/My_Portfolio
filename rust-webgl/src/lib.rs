@@ -60,6 +60,11 @@ pub fn start()-> Result<(),JsValue> {
         ("ocean",2),
         ("nature",3)
     ];
+    let btn_col = [
+        "darkred",
+        "darkturquoise",
+        "darkgreen"
+    ];
     for &(id,btn_mode) in &buttons
     {
         if let Some(elem) = document.get_element_by_id(id)
@@ -112,44 +117,27 @@ pub fn start()-> Result<(),JsValue> {
                         }
                     }
                 }
-                match id 
+                if btn_mode>1
                 {
-                    "lava" => {
-                        if let Some(ocean) = doc_clone.get_element_by_id("ocean")
+                    let prev_id = buttons[(btn_mode-2) as usize].0;
+                    if let Some(ele) = doc_clone.get_element_by_id(prev_id)
+                    {
+                        if let Ok(ele_btn) = ele.dyn_into::<HtmlButtonElement>()
                         {
-                            if let Ok(ocean_btn) = ocean.dyn_into::<HtmlButtonElement>()
-                            {
-                                make_button_right(ocean_btn, doc_clone.clone(),"darkturquoise");
-                            }
+                            make_button_left(ele_btn, doc_clone.clone(),btn_col[(btn_mode-2) as usize]);
                         }
                     }
-                    "ocean" => {
-                        if let Some(lava) = doc_clone.get_element_by_id("lava")
+                }
+                if (btn_mode as usize)<buttons.len()
+                {
+                    let next_id = buttons[btn_mode as usize].0;
+                    if let Some(ele) = doc_clone.get_element_by_id(next_id)
+                    {
+                        if let Ok(ele_btn) = ele.dyn_into::<HtmlButtonElement>()
                         {
-                            if let Ok(lava_btn) = lava.dyn_into::<HtmlButtonElement>()
-                            {
-                                make_button_left(lava_btn, doc_clone.clone(), "darkred");
-                            }
-                        }
-                        if let Some(nature) = doc_clone.get_element_by_id("nature")
-                        {
-                            if let Ok(nature_btn) = nature.dyn_into::<HtmlButtonElement>()
-                            {
-                                make_button_right(nature_btn, doc_clone.clone(),"darkgreen");
-                            }
-                        }
-
-                    }
-                    "nature" => {
-                        if let Some(ocean) = doc_clone.get_element_by_id("ocean")
-                        {
-                            if let Ok(ocean_btn) = ocean.dyn_into::<HtmlButtonElement>()
-                            {
-                                make_button_left(ocean_btn, doc_clone.clone(),"darkturquoise");
-                            }
+                            make_button_right(ele_btn, doc_clone.clone(),btn_col[btn_mode as usize]);
                         }
                     }
-                    _ => {}
                 }
             }) as Box<dyn FnMut()>);
             button.add_event_listener_with_callback("click", btn_callback.as_ref().unchecked_ref())?;
