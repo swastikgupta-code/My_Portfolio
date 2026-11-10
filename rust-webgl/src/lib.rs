@@ -59,7 +59,7 @@ pub fn start()-> Result<(),JsValue> {
         ("ocean",2),
         ("nature",3)
     ];
-    for (id,btn_mode) in buttons
+    for &(id,btn_mode) in &buttons
     {
         if let Some(elem) = document.get_element_by_id(id)
         {
@@ -100,17 +100,20 @@ pub fn start()-> Result<(),JsValue> {
                         let _ = about_container.style().set_property("display","block");
                     }
                 }
+                for &(id2,_mode2) in &buttons
+                {
+                    if let Some(btn_ele) = doc_clone.get_element_by_id(id2)
+                    {
+                        if let Ok(btn) = btn_ele.dyn_into::<HtmlButtonElement>()
+                        {
+                            btn.set_disabled(true);
+                            let _ = btn.style().set_property("background", "transparent");
+                        }
+                    }
+                }
                 match id 
                 {
                     "lava" => {
-                        if let Some(lava) = doc_clone.get_element_by_id("lava")
-                        {
-                            if let Ok(lava_btn) = lava.dyn_into::<HtmlButtonElement>()
-                            {
-                                lava_btn.set_disabled(true);
-                                let _ = lava_btn.style().set_property("background", "transparent");
-                            }
-                        }
                         if let Some(ocean) = doc_clone.get_element_by_id("ocean")
                         {
                             if let Ok(ocean_btn) = ocean.dyn_into::<HtmlButtonElement>()
@@ -120,59 +123,78 @@ pub fn start()-> Result<(),JsValue> {
                                     let _ = body.append_child(&ocean_btn);
                                 }
                                 ocean_btn.set_disabled(false);
-                                let _ = ocean_btn.style().set_property("background", "darkturquoise");
-                                let _ = ocean_btn.style().set_property("top", "auto");
-                                let _ = ocean_btn.style().set_property("left", "auto");
-                                let _ = ocean_btn.style().set_property("width", "8vw");
-                                let _ = ocean_btn.style().set_property("height", "4vh");
-                                let _ = ocean_btn.style().set_property("position", "fixed");
-                                let _ = ocean_btn.style().set_property("right", "15px");
-                                let _ = ocean_btn.style().set_property("bottom", "15px");
+                                let style = ocean_btn.style();
+                                let _ = style.set_property("background", "darkturquoise");
+                                let _ = style.set_property("top", "auto");
+                                let _ = style.set_property("left", "auto");
+                                let _ = style.set_property("width", "8vw");
+                                let _ = style.set_property("height", "4vh");
+                                let _ = style.set_property("position", "fixed");
+                                let _ = style.set_property("right", "15px");
+                                let _ = style.set_property("bottom", "15px");
                             }
                         }
                     }
                     "ocean" => {
-                        if let Some(ocean) = doc_clone.get_element_by_id("ocean")
-                        {
-                            if let Ok(ocean_btn) = ocean.dyn_into::<HtmlButtonElement>()
-                            {
-                                ocean_btn.set_disabled(true);
-                                let _ = ocean_btn.style().set_property("background", "transparent");
-                            }
-                        }
                         if let Some(lava) = doc_clone.get_element_by_id("lava")
                         {
                             if let Ok(lava_btn) = lava.dyn_into::<HtmlButtonElement>()
                             {
+                                if let Some(body) = doc_clone.body()
+                                {
+                                    let _ = body.append_child(&lava_btn);
+                                }
                                 lava_btn.set_disabled(false);
-                                let _ = lava_btn.style().set_property("background", "darkred");
+                                let style = lava_btn.style();
+                                let _ = style.set_property("background", "darkred");
+                                let _ = style.set_property("top", "auto");
+                                let _ = style.set_property("left", "15px");
+                                let _ = style.set_property("width", "8vw");
+                                let _ = style.set_property("height", "4vh");
+                                let _ = style.set_property("position", "fixed");
+                                let _ = style.set_property("bottom", "15px");
                             }
                         }
                         if let Some(nature) = doc_clone.get_element_by_id("nature")
                         {
                             if let Ok(nature_btn) = nature.dyn_into::<HtmlButtonElement>()
                             {
+                                if let Some(body) = doc_clone.body()
+                                {
+                                    let _ = body.append_child(&nature_btn);
+                                }
                                 nature_btn.set_disabled(false);
-                                let _ = nature_btn.style().set_property("background", "green");
+                                let style = nature_btn.style();
+                                let _ = style.set_property("background", "darkgreen");
+                                let _ = style.set_property("top", "auto");
+                                let _ = style.set_property("left", "auto");
+                                let _ = style.set_property("width", "8vw");
+                                let _ = style.set_property("height", "4vh");
+                                let _ = style.set_property("position", "fixed");
+                                let _ = style.set_property("right", "15px");
+                                let _ = style.set_property("bottom", "15px");
                             }
                         }
 
                     }
                     "nature" => {
-                        if let Some(nature) = doc_clone.get_element_by_id("nature")
-                        {
-                            if let Ok(nature_btn) = nature.dyn_into::<HtmlButtonElement>()
-                            {
-                                nature_btn.set_disabled(true);
-                                let _ = nature_btn.style().set_property("background", "transparent");
-                            }
-                        }
                         if let Some(ocean) = doc_clone.get_element_by_id("ocean")
                         {
                             if let Ok(ocean_btn) = ocean.dyn_into::<HtmlButtonElement>()
                             {
+                                if let Some(body) = doc_clone.body()
+                                {
+                                    let _ = body.append_child(&ocean_btn);
+                                }
                                 ocean_btn.set_disabled(false);
-                                let _ = ocean_btn.style().set_property("background", "darkturquoise");
+                                let style = ocean_btn.style();
+                                let _ = style.set_property("background", "darkturquoise");
+                                let _ = style.set_property("top", "auto");
+                                let _ = style.set_property("left", "15px");
+                                let _ = style.set_property("width", "8vw");
+                                let _ = style.set_property("height", "4vh");
+                                let _ = style.set_property("position", "fixed");
+                                let _ = style.set_property("bottom", "15px");
                             }
                         }
                     }
