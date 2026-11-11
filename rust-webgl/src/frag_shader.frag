@@ -379,9 +379,13 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
     vec2 card_half = vec2(0.72/float(num),0.35);
     vec2 gap = vec2(2.4,0.0)/float(num);
     float angle = 0.0;
-    float angular_speed = 0.0;
-    float cam_dist = 1.5;
+    float angular_speed = 0.3;
+    float cam_dist = 2.5;
     float rad = 1.6;
+    float fov = 1.4;
+    vec3 ro = vec3(0.0);
+    vec3 rd = normalize(vec3(uv,-fov));
+    float min_t = 1000.0;
     vec3 col = vec3(0.0);
     for(int i = 0;i<MAX_CARDS;i++) {
         if(i>=num) break;
@@ -393,23 +397,34 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
         vec3 normal = vec3(s,0.0,c);
         vec3 tang = vec3(c,0.0,-s);
         vec3 vert = vec3(0.0,1.0,0.0);
-        vec2 d = uv - pos;
-        vec2 dist = abs(d) - card_half;
-        float edge_dist = max(dist.x,dist.y);
-        float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
-        if(card_mask<=0.0) continue;
-        vec2 c_uv = d/card_half;
-        vec3 c_col = vec3(0.0);
-        if(i==0)
-            c_col = lava(c_uv);
-        else if(i==1)
-            c_col = ocean(c_uv);
-        else if(i==2)
-            c_col = nature(c_uv,1.0);
-        else if(i==3)
-            c_col = lightning(c_uv);
-        c_col = c_col * card_mask;
-        col += c_col;
+        float denom = dot(normal,rd);
+        if(denom>-0.001) continue;
+        float t = dot(center-ro,normal)/denom;
+        if(t>0.0 && t<min_t)
+        {
+            vec3 inter_point = ro+t*rd;
+            vec3 disp = inter_point - center;
+            pos = vec2(dot(disp,tang),dot(disp,vert));
+            vec2 dist = abs(pos) - card_half;
+            float edge_dist = max(dist.x,dist.y);
+            float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
+            if(card_mask>0.0)
+            {
+                min_t = t;
+                vec2 c_uv = pos/card_half;
+                vec3 c_col = vec3(0.0);
+                if(i==0)
+                    c_col = lava(c_uv);
+                else if(i==1)
+                    c_col = ocean(c_uv);
+                else if(i==2)
+                    c_col = nature(c_uv,1.0);
+                else if(i==3)
+                    c_col = lightning(c_uv);
+                c_col = c_col * card_mask;
+                col = c_col;
+            }
+        }
     }
     return col;
 }
