@@ -378,10 +378,13 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
     vec2 c1_center = vec2(-0.13*aspect.x*float(num),-0.4);
     vec2 card_half = vec2(0.72/float(num),0.35);
     vec2 gap = vec2(2.4,0.0)/float(num);
+    float angle = 0.0;
+    float angular_speed = 0.0;
     vec3 col = vec3(0.0);
     for(int i = 0;i<MAX_CARDS;i++) {
         if(i>=num) break;
         vec2 pos = c1_center + gap*float(i);
+        angle = float(i)*(3.1415/float(num)) + angular_speed*time;
         vec2 d = uv - pos;
         vec2 dist = abs(d) - card_half;
         float edge_dist = max(dist.x,dist.y);
