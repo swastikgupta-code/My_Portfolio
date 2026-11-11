@@ -6,7 +6,7 @@ uniform float eye_height;
 uniform int mode;
 varying vec2 v_uv;
 #define MAX_CARDS 4
-//reverted changes in the commit because that commit was for next version of this website which i am making for week 4 of terra so i am making it in different branch cause commiting it in this branch will cause the effect to show in the github pages aka my demo
+
 float sd_ellipse(vec2 p,vec2 rad)
 {
     float k1 = length(p/rad);
@@ -147,6 +147,63 @@ vec3 lava(vec2 c_uv)
     }
     return scene_col;
 }
+vec3 lava(vec2 c_uv,float width)
+{
+    vec2 flame_uv = c_uv * vec2(1.8,1.2);
+    flame_uv.y -= time*0.75;
+    flame_uv.x += sin(c_uv.y*3.5+ time*1.6) * 0.18;
+    vec2 flame_turb = vec2(
+        fbm(flame_uv),
+        fbm(flame_uv + vec2(4.3,1.7))
+    );
+    float inten = fbm(flame_uv + flame_turb *2.0);
+    vec3 dark_crimson = vec3(0.28, 0.03, 0.01);
+    vec3 crimson = vec3(0.82, 0.12, 0.01);
+    vec3 orange = vec3(1.0,  0.48, 0.02);
+    vec3 yellow = vec3(1.0,  0.88, 0.25);
+    float gradient = clamp(0.95-c_uv.y*0.65,0.0,1.0);
+    vec3 sky_col = mix(dark_crimson,crimson,gradient);
+    float flame = smoothstep(0.32,0.85,inten+(1.0-c_uv.y)*0.25);
+    sky_col = mix(sky_col,orange,flame);
+    sky_col = mix(sky_col, yellow, smoothstep(0.70, 0.95, inten + (0.5 - c_uv.y) * 0.3));
+    float lava_level = -0.22 + 0.04 * sin(c_uv.x*4.5 + time * 1.8);
+    float laval_region = smoothstep(0.04,-0.04,c_uv.y-lava_level);
+    vec2 lava_uv = vec2(c_uv.x * 3.2, (c_uv.y - lava_level) * 6.5);;
+    lava_uv += 0.25 * vec2(fbm(lava_uv + time * 0.3), fbm(lava_uv + vec2(3.1, time * 0.2)));
+    float cracks = voronoi_cracks(lava_uv + vec2(sin(time * 0.4), time * 0.15));;
+    vec3 molten_core = vec3(1.0, 0.92, 0.45);
+    vec3 molten_body = vec3(1.0, 0.36, 0.02);
+    vec3 crust_top = vec3(0.75, 0.10, 0.01);
+    vec3 crust_edge = vec3(0.24, 0.04, 0.02);
+    vec3 magma_col = mix(molten_core,molten_body,smoothstep(0.08,0.28,cracks));
+    magma_col = mix(magma_col,crust_edge,smoothstep(0.28,0.48,cracks));
+    magma_col = mix(magma_col,crust_top,smoothstep(0.48,0.78,cracks));
+    vec3 scene_col = mix(sky_col,magma_col,laval_region);
+    float rock_profile = -0.58;
+    rock_profile += 0.18 * sin(c_uv.x * 3.0 + 0.4);
+    rock_profile += 0.10 * sin(c_uv.x * 7.5 + 1.8);
+    rock_profile += 0.07 * noise(vec2(c_uv.x * 14.0, 0.0));
+    rock_profile += 0.30 * pow(abs(c_uv.x), 2.2);
+    float rock_mask = smoothstep(0.02, -0.02, c_uv.y - rock_profile);
+    float rock_fbm = fbm(c_uv * 8.0);
+    vec3 base_rock = mix(vec3(0.18, 0.04, 0.02), vec3(0.32, 0.08, 0.03), rock_fbm);
+    float ridge_glow = smoothstep(0.09, 0.0, abs(c_uv.y - rock_profile));
+    base_rock += vec3(1.0, 0.35, 0.02) * ridge_glow * 1.1;
+    float fissure = smoothstep(0.05, 0.0, abs(c_uv.y - rock_profile + 0.04 * sin(c_uv.x * 12.0)));
+    base_rock += vec3(1.0, 0.65, 0.1) * fissure * (0.6 + 0.4 * sin(time * 2.8 + c_uv.x * 9.0));
+    scene_col = mix(scene_col, base_rock, rock_mask);
+    for (int i = 0; i < 16; i++) {
+        float fi = float(i);
+        vec2 spark_p;
+        spark_p.x = fract(fi * 0.163 + sin(fi * 27.3) * 0.25) * 2.0 - 1.0;
+        spark_p.x += 0.10 * sin(time * 2.5 + fi * 2.1);
+        spark_p.y = fract(fi * 0.217 + time * (0.22 + 0.06 * hash1(vec2(fi, 3.7)))) * 2.0 - 1.0;
+        float d_spark = length(c_uv - spark_p);
+        float spark = smoothstep(0.028, 0.0, d_spark);
+        scene_col += vec3(1.0, 0.75, 0.25) * spark * 1.4;
+    }
+    return scene_col;
+}
 vec3 ocean(vec2 c_uv) 
 {
     vec3 deep_space   = vec3(0.01, 0.03, 0.10);
@@ -231,21 +288,49 @@ vec3 ocean(vec2 c_uv)
     }
     return scene_col;
 }
-vec3 nature(vec2 c_uv)
+vec3 nature(vec2 c_uv,float width)
 {
-    vec3 sky_colour = vec3(0.06,0.18,0.14);
-    vec3 horizon_colour = vec3(0.92,0.72,0.38);
-    vec3 sun_colour = vec3(1.0, 0.9, 0.6);
+    vec3 sky_colour_rise = vec3(0.09, 0.62, 0.67);
+    vec3 horizon_colour_rise = vec3(0.99, 0.93, 0.44);
+    vec3 sky_colour_noon = vec3(0.05, 0.86, 0.93);
+    vec3 horizon_colour_noon = vec3(1.0, 0.98, 0.72);
+    vec3 sky_colour_fall = vec3(0.93, 0.33, 0.05);
+    vec3 horizon_colour_fall = vec3(0.88, 0.55, 0.14);
+    vec3 sky_colour_night = vec3(0.01, 0.03, 0.10);
+    vec3 horizon_colour_night = vec3(0.06, 0.24, 0.55);
+    vec3 sun_colour = vec3(0.66, 0.6, 1.0);
+    vec3 moon_colour = vec3(0.75, 0.92, 1.00);
+    float angle = mod(time*0.2,6.28);
+    if(angle<0.0) angle += 6.28;
+    float t = 2.0*angle/3.14;
+    vec3 sky1 = mix(sky_colour_rise,sky_colour_noon,clamp(t,0.0,1.0));
+    vec3 sky2 = mix(sky1,sky_colour_fall,clamp(t-1.0,0.0,1.0));
+    vec3 sky3 = mix(sky2,sky_colour_night,clamp(t-2.0,0.0,1.0));
+    vec3 sky4 = mix(sky3,sky_colour_rise,clamp(t-3.0,0.0,1.0));  
+    vec3 horizon1 = mix(horizon_colour_rise,horizon_colour_noon,clamp(t,0.0,1.0));
+    vec3 horizon2 = mix(horizon1,horizon_colour_fall,clamp(t-1.0,0.0,1.0));
+    vec3 horizon3 = mix(horizon2,horizon_colour_night,clamp(t-2.0,0.0,1.0));
+    vec3 horizon4 = mix(horizon3,horizon_colour_rise,clamp(t-3.0,0.0,1.0)); 
     float sky_gradient = clamp((c_uv.y + 0.1)*0.7,0.0,1.0);
-    vec3 sky_col = mix(horizon_colour,sky_colour,sky_gradient);
-    vec2 sun_pos = vec2(0.4,0.6);
+    vec3 sky_col = mix(horizon4,sky4,sky_gradient);
+    vec2 sun_pos = vec2(
+        (width+0.2)*cos(mod(angle,3.14)),
+        abs(0.72*sin(angle))
+    );
     float sun_dis = length(c_uv-sun_pos);
     float sun_core = smoothstep(0.13,0.0,sun_dis);
     float sun_outer = smoothstep(0.6,0.0,sun_dis) * 0.5;
-    sky_col += sun_colour * (sun_core + sun_outer);
+    if(sign(sin(time*0.2))>0.0)
+        sky_col += sun_colour * (sun_core + sun_outer);
+    else
+        sky_col += moon_colour * (sun_core + sun_outer);
     vec3 mountain_colour = vec3(0.55, 0.41, 0.04);
     vec3 mountain_colour_2 = vec3(0.79, 0.52, 0.06);
-    vec3 mountain_colour_outer = vec3(1.0, 0.95, 0.6);
+    vec3 mountain_colour_outer = sun_colour;
+    if(sign(sin(time*0.2))<0.0)
+    {
+        mountain_colour_outer = moon_colour;
+    }
     float mountain_profile = 0.3;
     mountain_profile += 0.25 * sin(c_uv.x * 4.0 - 0.4) - 0.4;
     mountain_profile += 0.05 * sin(c_uv.x * 7.0 + 1.9) - 0.1;
@@ -254,7 +339,7 @@ vec3 nature(vec2 c_uv)
     float mountain_mask = smoothstep(-0.015,0.015,mountain_profile-c_uv.y);
     float mountain_fbm = fbm(c_uv*8.0);
     vec3 mountain_col = mix(mountain_colour,mountain_colour_2,mountain_fbm);
-    mountain_col += mountain_colour_outer * exp(-27.0*pow(abs(c_uv.y-mountain_profile),1.3)) * 0.4;
+    mountain_col += mountain_colour_outer * exp(-27.0*pow(abs(c_uv.y-mountain_profile),1.3)) * 0.7 * clamp((1.0 - 0.9*sun_dis),-0.1,1.0);
     vec3 scene_col = mix(sky_col,mountain_col,mountain_mask);
     vec3 grass_colour = vec3(0.03, 0.5, 0.33);
     vec3 grass_colour_2 = vec3(0.04, 0.71, 0.08);
@@ -290,30 +375,57 @@ vec3 lightning(vec2 c_uv)
 }
 vec3 card_color(vec2 aspect,vec2 uv,int num)
 {
-    vec2 c1_center = vec2(-0.13*aspect.x*float(num),-0.4);
-    vec2 card_half = vec2(0.72/float(num),0.35);
-    vec2 gap = vec2(2.4,0.0)/float(num);
+    vec2 card_half = vec2(0.24,0.35);
+    float angle = 0.0;
+    float angular_speed = 0.3;
+    float cam_dist = 2.5;
+    float rad = 1.6;
+    float fov = 1.4;
+    vec3 ro = vec3(0.0);
+    vec3 rd = normalize(vec3(uv,-fov));
+    float min_t = 1000.0;
     vec3 col = vec3(0.0);
     for(int i = 0;i<MAX_CARDS;i++) {
         if(i>=num) break;
-        vec2 pos = c1_center + gap*float(i);
-        vec2 d = uv - pos;
-        vec2 dist = abs(d) - card_half;
-        float edge_dist = max(dist.x,dist.y);
-        float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
-        if(card_mask<=0.0) continue;
-        vec2 c_uv = d/card_half;
-        vec3 c_col = vec3(0.0);
-        if(i==0)
-            c_col = lava(c_uv);
-        else if(i==1)
-            c_col = ocean(c_uv);
-        else if(i==2)
-            c_col = nature(c_uv);
-        else if(i==3)
-            c_col = lightning(c_uv);
-        c_col = c_col * card_mask;
-        col += c_col;
+        angle = float(i)*(3.1415/float(num)) + angular_speed*time;
+        if(angle>3.1415)
+        {
+            angle -= 3.1415;
+        }
+        float s = sin(angle);
+        float c = cos(angle);
+        vec3 center = vec3(rad*s,-0.4,rad*c - cam_dist);
+        vec3 normal = vec3(s,0.0,c);
+        vec3 tang = vec3(c,0.0,-s);
+        vec3 vert = vec3(0.0,1.0,0.0);
+        float denom = dot(normal,rd);
+        if(denom>-0.001) continue;
+        float t = dot(center-ro,normal)/denom;
+        if(t>0.0 && t<min_t)
+        {
+            vec3 inter_point = ro+t*rd;
+            vec3 disp = inter_point - center;
+            vec2 pos = vec2(dot(disp,tang),dot(disp,vert));
+            vec2 dist = abs(pos) - card_half;
+            float edge_dist = max(dist.x,dist.y);
+            float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
+            if(card_mask>0.0)
+            {
+                min_t = t;
+                vec2 c_uv = pos/card_half;
+                vec3 c_col = vec3(0.0);
+                if(i==0)
+                    c_col = lava(c_uv);
+                else if(i==1)
+                    c_col = ocean(c_uv);
+                else if(i==2)
+                    c_col = nature(c_uv,1.0);
+                else if(i==3)
+                    c_col = lightning(c_uv);
+                c_col = c_col * card_mask;
+                col = c_col;
+            }
+        }
     }
     return col;
 }
@@ -351,7 +463,7 @@ void main()
     }
     else if(mode==3)
     {
-        vec3 bg_col = nature(uv);
+        vec3 bg_col = nature(uv,aspect.x);
         col += bg_col;
     }
     gl_FragColor = vec4(col,1.0);

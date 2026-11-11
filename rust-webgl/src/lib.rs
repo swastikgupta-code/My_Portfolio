@@ -1,9 +1,9 @@
-use std::cell::Ref;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{window,Element,HtmlButtonElement,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
+use web_sys::Document;
+use web_sys::{window,HtmlCollection,HtmlElement,Element,HtmlButtonElement,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
 #[wasm_bindgen]
 pub fn start()-> Result<(),JsValue> {
     let window = window().expect("unable to create window");
@@ -60,7 +60,12 @@ pub fn start()-> Result<(),JsValue> {
         ("ocean",2),
         ("nature",3)
     ];
-    for (id,btn_mode) in buttons
+    let btn_col = [
+        "darkred",
+        "darkturquoise",
+        "darkgreen"
+    ];
+    for &(id,btn_mode) in &buttons
     {
         if let Some(elem) = document.get_element_by_id(id)
         {
@@ -85,6 +90,82 @@ pub fn start()-> Result<(),JsValue> {
                             }
                         }
                     }
+                }
+                if let Some(welcome) = doc_clone.get_element_by_id("welcome")
+                {
+                    if let Ok(element) = welcome.dyn_into::<Element>()
+                    {
+                        element.remove();
+                    }
+                }
+                for &(id2,_mode2) in &buttons
+                {
+                    if let Some(btn_ele) = doc_clone.get_element_by_id(id2)
+                    {
+                        if let Ok(btn) = btn_ele.dyn_into::<HtmlButtonElement>()
+                        {
+                            btn.set_disabled(true);
+                            let _ = btn.style().set_property("background", "transparent");
+                        }
+                    }
+                }
+                if btn_mode>1
+                {
+                    let prev_id = buttons[(btn_mode-2) as usize].0;
+                    if let Some(ele) = doc_clone.get_element_by_id(prev_id)
+                    {
+                        if let Ok(ele_btn) = ele.dyn_into::<HtmlButtonElement>()
+                        {
+                            make_button_left(ele_btn, doc_clone.clone(),btn_col[(btn_mode-2) as usize]);
+                        }
+                    }
+                }
+                if (btn_mode as usize)<buttons.len()
+                {
+                    let next_id = buttons[btn_mode as usize].0;
+                    if let Some(ele) = doc_clone.get_element_by_id(next_id)
+                    {
+                        if let Ok(ele_btn) = ele.dyn_into::<HtmlButtonElement>()
+                        {
+                            make_button_right(ele_btn, doc_clone.clone(),btn_col[btn_mode as usize]);
+                        }
+                    }
+                }
+                let containers: HtmlCollection = doc_clone.get_elements_by_class_name("containers");
+                for i in 0..containers.length()
+                {
+                    if let Some(container) = containers.item(i)
+                    {
+                        if let Ok(cont) = container.dyn_into::<HtmlElement>()
+                        {
+                            let _ = cont.style().set_property("visibility", "hidden");
+                            let _ = cont.style().set_property("display", "none");
+                        }
+                    }
+                }
+                match id
+                {
+                    "lava" => {
+                        if let Some(element) = doc_clone.get_element_by_id("about_container")
+                        {
+                            if let Ok(about_container) = element.dyn_into::<HtmlElement>()
+                            {
+                                let _ = about_container.style().set_property("visibility","visible");
+                                let _ = about_container.style().set_property("display","block");
+                            }
+                        }
+                    }
+                    "ocean" => {
+                        if let Some(element) = doc_clone.get_element_by_id("project_container")
+                        {
+                            if let Ok(project_container) = element.dyn_into::<HtmlElement>()
+                            {
+                                let _ = project_container.style().set_property("visibility","visible");
+                                let _ = project_container.style().set_property("display","block");
+                            }
+                        }
+                    }
+                    _ => {}
                 }
             }) as Box<dyn FnMut()>);
             button.add_event_listener_with_callback("click", btn_callback.as_ref().unchecked_ref())?;
@@ -202,4 +283,37 @@ fn link_shader(context : &GL,vert: &WebGlShader, frag: &WebGlShader) -> Result<W
     else{
         Err(context.get_program_info_log(&program).unwrap_or_else(|| "Linking error".to_string()))
     }
+}
+fn make_button_left(button: HtmlButtonElement,doc_clone: Document,col: &str)
+{
+    if let Some(body) = doc_clone.body()
+    {
+        let _ = body.append_child(&button);
+    }
+    button.set_disabled(false);
+    let style = button.style();
+    let _ = style.set_property("background", col);
+    let _ = style.set_property("top", "auto");
+    let _ = style.set_property("left", "15px");
+    let _ = style.set_property("width", "8vw");
+    let _ = style.set_property("height", "4vh");
+    let _ = style.set_property("position", "fixed");
+    let _ = style.set_property("bottom", "15px");
+}
+fn make_button_right(button: HtmlButtonElement,doc_clone: Document,col: &str)
+{
+    if let Some(body) = doc_clone.body()
+    {
+        let _ = body.append_child(&button);
+    }
+    button.set_disabled(false);
+    let style = button.style();
+    let _ = style.set_property("background", col);
+    let _ = style.set_property("top", "auto");
+    let _ = style.set_property("left", "auto");
+    let _ = style.set_property("width", "8vw");
+    let _ = style.set_property("height", "4vh");
+    let _ = style.set_property("position", "fixed");
+    let _ = style.set_property("bottom", "15px");
+    let _ = style.set_property("right", "15px");
 }
