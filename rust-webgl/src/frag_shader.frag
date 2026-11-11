@@ -375,9 +375,7 @@ vec3 lightning(vec2 c_uv)
 }
 vec3 card_color(vec2 aspect,vec2 uv,int num)
 {
-    vec2 c1_center = vec2(-0.13*aspect.x*float(num),-0.4);
-    vec2 card_half = vec2(0.72/float(num),0.35);
-    vec2 gap = vec2(2.4,0.0)/float(num);
+    vec2 card_half = vec2(0.24,0.35);
     float angle = 0.0;
     float angular_speed = 0.3;
     float cam_dist = 2.5;
@@ -389,11 +387,14 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
     vec3 col = vec3(0.0);
     for(int i = 0;i<MAX_CARDS;i++) {
         if(i>=num) break;
-        vec2 pos = c1_center + gap*float(i);
         angle = float(i)*(3.1415/float(num)) + angular_speed*time;
+        if(angle>3.1415)
+        {
+            angle -= 3.1415;
+        }
         float s = sin(angle);
         float c = cos(angle);
-        vec3 center = vec3(rad*s,pos.y,rad*c - cam_dist);
+        vec3 center = vec3(rad*s,-0.4,rad*c - cam_dist);
         vec3 normal = vec3(s,0.0,c);
         vec3 tang = vec3(c,0.0,-s);
         vec3 vert = vec3(0.0,1.0,0.0);
@@ -404,7 +405,7 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
         {
             vec3 inter_point = ro+t*rd;
             vec3 disp = inter_point - center;
-            pos = vec2(dot(disp,tang),dot(disp,vert));
+            vec2 pos = vec2(dot(disp,tang),dot(disp,vert));
             vec2 dist = abs(pos) - card_half;
             float edge_dist = max(dist.x,dist.y);
             float card_mask = 1.0 - smoothstep(-0.015,0.0,edge_dist);
