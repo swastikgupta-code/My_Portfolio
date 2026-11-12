@@ -55,6 +55,7 @@ pub fn start()-> Result<(),JsValue> {
     let eye_height_loc = context.get_uniform_location(&program, "eye_height");
     let mode_loc = context.get_uniform_location(&program, "mode");
     let mode = Rc::new(RefCell::new(0i32));
+    let time = Rc::new(RefCell::new(0.0f32));
     let buttons = [
         ("lava",1),
         ("ocean",2),
@@ -74,9 +75,36 @@ pub fn start()-> Result<(),JsValue> {
             btn_callback.forget();
         }
     }
+    {
+        let mode_clone = Rc::clone(&mode);
+        let doc_clone = document.clone();
+        let time_clone = Rc::clone(&time);
+        let canvas_click = Closure::wrap(Box::new(move |event: MouseEvent| {
+            if *mode_clone.borrow() != 0
+            {
+                return;
+            }
+            let win = web_sys::window().unwrap();
+            let w = win.inner_width().unwrap().as_f64().unwrap_or(1.0) as f32;
+            let h = win.inner_height().unwrap().as_f64().unwrap_or(1.0) as f32;
+            let x = (event.client_x() as f32/w)*2.0 - 1.0;
+            let y = -(event.client_y() as f32/h)*2.0 + 1.0;
+            let current_time = *time_clone.borrow();
+            if let Some(card_id) = hit_card(x, y, w/h, current_time, 15)
+            {
+                let target_mode = ((card_id%3)+1) as i32;
+                activate_mode(target_mode, &mode_clone, &doc_clone);
+            }
+        }) as Box<dyn FnMut(_)>);
+        canvas.add_event_listener_with_callback("click", canvas_click.as_ref().unchecked_ref())?;
+        canvas_click.forget();
+    }
     let mouse_pos  = Rc::new(RefCell::new((0.0f32,0.0f32)));
     {
         let mouse_pos = mouse_pos.clone();
+        let mode_clone = Rc::clone(&mode);
+        let time_clone = Rc::clone(&time);
+        let canvas_clone = canvas.clone();
         let mouse_callback = Closure::wrap(Box::new(move | event: MouseEvent | {
             let win = web_sys::window().unwrap();
             let w = win.inner_width().unwrap().as_f64().unwrap_or(1.0) as f32;
@@ -84,11 +112,26 @@ pub fn start()-> Result<(),JsValue> {
             let x = (event.client_x() as f32/w)*2.0 - 1.0;
             let y = -(event.client_y() as f32/h)*2.0 + 1.0;
             *mouse_pos.borrow_mut() = (x,y);
+            if *mode_clone.borrow() == 0
+            {
+                let current_time = *time_clone.borrow();
+                let cursor = if hit_card(x, y, w/h, current_time, 15).is_some()
+                {
+                    "pointer"
+                }
+                else {
+                    "default"
+                };
+                let _ = canvas_clone.style().set_property("cursor", cursor);
+            }
+            else 
+            {
+                let _ = canvas_clone.style().set_property("cursor", "default");
+            }
         }) as Box<dyn FnMut(_)>);
         window.add_event_listener_with_callback("mousemove", mouse_callback.as_ref().unchecked_ref())?;
         mouse_callback.forget();
     }
-    let mut time = 0.0f32;
     let mut eye_height = 0.01f32;
     let mut speed = 0.001f32;
     let mut change = 0;
@@ -100,7 +143,7 @@ pub fn start()-> Result<(),JsValue> {
     let g = f.clone();
     *g.borrow_mut() = Some(Closure::wrap(Box::new(
         move || {
-            time += 0.016f32;
+            *time.borrow_mut() += 0.016f32;
             if(eye_height>0.11 && speed>0.0)|| (eye_height<0.01 && speed<0.0)
             { 
                 speed = -speed; 
@@ -125,12 +168,13 @@ pub fn start()-> Result<(),JsValue> {
                 eye_height += speed;
             }
             let (mx,my) = *mouse_pos.borrow();
+            let current_time = *time.borrow();
             context.clear_color(1.0, 0.0, 0.0, 1.0);
             context.clear(GL::COLOR_BUFFER_BIT);
 
             context.uniform2f(res_loc.as_ref(),width as f32,height as f32);
             context.uniform2f(mos_loc.as_ref(), mx,my);
-            context.uniform1f(time_loc.as_ref(),time);
+            context.uniform1f(time_loc.as_ref(),current_time);
             context.uniform1f(eye_height_loc.as_ref(),eye_height);
             let current_mode:i32 = *mode.borrow();
             context.uniform1i(mode_loc.as_ref(),current_mode);
@@ -224,25 +268,25 @@ fn hit_card(x:f32,y:f32,aspect_x:f32,time:f32,num: usize) -> Option<usize>
     let uv_x = x*aspect_x;
     let uv_y = y;
     let fov = 1.4f32;
-    let card_half_x = 0.25f32;
+    let card_half_x = 0.24f32;
     let card_half_y = 0.35f32;
-    let angular_speed = 0.6;
+    let angular_speed = 0.0;
     let len = (uv_x*uv_x+uv_y*uv_y+fov*fov).sqrt();
     let cam_dist = 2.5;
     let rad = 1.6;
-    let rd = (uv_x/len,uv_y/len,fov/len);
+    let rd = (uv_x/len,uv_y/len,-fov/len);
     let mut min_t = 1000.0f32;
     let mut hit_card:Option<usize> = None;
     for i in 0..num
     {
-        let angle = (i as f32)*(6.2831/(num as f32)) + angular_speed*time;
+        let angle = (i as f32)*(6.2832/(num as f32)) + angular_speed*time;
         let s = angle.sin();
         let c = angle.cos();
         let center = (rad*s,-0.4f32,rad*c-cam_dist);
         let normal = (s,0.0f32,c);
         let tangent = (c,0.0f32,-s);
         let denom = rd.0*normal.0 + rd.1*normal.1 + rd.2*normal.2;
-        if denom>0.001
+        if denom>-0.001
         {
             continue;
         }

@@ -377,7 +377,7 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
 {
     vec2 card_half = vec2(0.24,0.35);
     float angle = 0.0;
-    float angular_speed = 0.6;
+    float angular_speed = 0.0;
     float cam_dist = 2.5;
     float rad = 1.6;
     float fov = 1.4;
