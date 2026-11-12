@@ -2,6 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    pointer-events: none;
 }
 body {
     min-height: 100vh;
@@ -19,6 +20,7 @@ body {
     width: 100%;
     height: 100%;
     z-index: -1;
+    pointer-events: all;
 }
 #welcome {
     font-size: clamp(2rem,10vw,6rem);
