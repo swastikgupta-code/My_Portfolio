@@ -3,7 +3,7 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::Document;
-use web_sys::{window,HtmlCollection,HtmlElement,Element,HtmlButtonElement,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
+use web_sys::{window,HtmlCollection,WheelEvent,HtmlElement,Element,HtmlButtonElement,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
 #[wasm_bindgen]
 pub fn start()-> Result<(),JsValue> {
     let window = window().expect("unable to create window");
@@ -54,8 +54,10 @@ pub fn start()-> Result<(),JsValue> {
     let time_loc = context.get_uniform_location(&program, "time");
     let eye_height_loc = context.get_uniform_location(&program, "eye_height");
     let mode_loc = context.get_uniform_location(&program, "mode");
+    let offset_loc = context.get_uniform_location(&program, "offset");
     let mode = Rc::new(RefCell::new(0i32));
     let time = Rc::new(RefCell::new(0.0f32));
+    let card_offset = Rc::new(RefCell::new(0.0f64));
     let buttons = [
         ("lava",1),
         ("ocean",2),
@@ -78,7 +80,7 @@ pub fn start()-> Result<(),JsValue> {
     {
         let mode_clone = Rc::clone(&mode);
         let doc_clone = document.clone();
-        let time_clone = Rc::clone(&time);
+        let offset_clone = Rc::clone(&card_offset);
         let canvas_click = Closure::wrap(Box::new(move |event: MouseEvent| {
             if *mode_clone.borrow() != 0
             {
@@ -89,8 +91,8 @@ pub fn start()-> Result<(),JsValue> {
             let h = win.inner_height().unwrap().as_f64().unwrap_or(1.0) as f32;
             let x = (event.client_x() as f32/w)*2.0 - 1.0;
             let y = -(event.client_y() as f32/h)*2.0 + 1.0;
-            let current_time = *time_clone.borrow();
-            if let Some(card_id) = hit_card(x, y, w/h, current_time, 15)
+            let current_offset = *offset_clone.borrow();
+            if let Some(card_id) = hit_card(x, y, w/h, current_offset, 15)
             {
                 let target_mode = ((card_id%3)+1) as i32;
                 activate_mode(target_mode, &mode_clone, &doc_clone);
@@ -103,7 +105,8 @@ pub fn start()-> Result<(),JsValue> {
     {
         let mouse_pos = mouse_pos.clone();
         let mode_clone = Rc::clone(&mode);
-        let time_clone = Rc::clone(&time);
+        let offset_clone = Rc::clone(&card_offset);
+        let scroll_offset_clone = Rc::clone(&card_offset);
         let canvas_clone = canvas.clone();
         let mouse_callback = Closure::wrap(Box::new(move | event: MouseEvent | {
             let win = web_sys::window().unwrap();
@@ -114,8 +117,8 @@ pub fn start()-> Result<(),JsValue> {
             *mouse_pos.borrow_mut() = (x,y);
             if *mode_clone.borrow() == 0
             {
-                let current_time = *time_clone.borrow();
-                let cursor = if hit_card(x, y, w/h, current_time, 15).is_some()
+                let current_offset = *offset_clone.borrow();
+                let cursor = if hit_card(x, y, w/h, current_offset, 15).is_some()
                 {
                     "pointer"
                 }
@@ -129,8 +132,13 @@ pub fn start()-> Result<(),JsValue> {
                 let _ = canvas_clone.style().set_property("cursor", "default");
             }
         }) as Box<dyn FnMut(_)>);
+        let scroll_callback = Closure::wrap(Box::new(move |event: WheelEvent| {
+            *scroll_offset_clone.borrow_mut() += event.delta_y() * 0.5;
+        }) as Box<dyn FnMut(_)>);
         window.add_event_listener_with_callback("mousemove", mouse_callback.as_ref().unchecked_ref())?;
+        canvas.add_event_listener_with_callback("wheel", scroll_callback.as_ref().unchecked_ref())?;
         mouse_callback.forget();
+        scroll_callback.forget();
     }
     let mut eye_height = 0.01f32;
     let mut speed = 0.001f32;
@@ -169,6 +177,7 @@ pub fn start()-> Result<(),JsValue> {
             }
             let (mx,my) = *mouse_pos.borrow();
             let current_time = *time.borrow();
+            let current_offset = *card_offset.borrow();
             context.clear_color(1.0, 0.0, 0.0, 1.0);
             context.clear(GL::COLOR_BUFFER_BIT);
 
@@ -176,6 +185,7 @@ pub fn start()-> Result<(),JsValue> {
             context.uniform2f(mos_loc.as_ref(), mx,my);
             context.uniform1f(time_loc.as_ref(),current_time);
             context.uniform1f(eye_height_loc.as_ref(),eye_height);
+            context.uniform1f(offset_loc.as_ref(), current_offset as f32);
             let current_mode:i32 = *mode.borrow();
             context.uniform1i(mode_loc.as_ref(),current_mode);
             context.draw_arrays(GL::TRIANGLES, 0, 6);
@@ -265,28 +275,27 @@ fn make_button_right(button: HtmlButtonElement,doc_clone: Document,col: &str)
     let _ = style.set_property("right", "15px");
     let _ = style.set_property("pointer-events", "all");
 }
-fn hit_card(x:f32,y:f32,aspect_x:f32,time:f32,num: usize) -> Option<usize>
+fn hit_card(x:f32,y:f32,aspect_x:f32,offset:f64,num: usize) -> Option<usize>
 {
-    let uv_x = x*aspect_x;
-    let uv_y = y;
-    let fov = 1.4f32;
-    let card_half_x = 0.24f32;
-    let card_half_y = 0.35f32;
-    let angular_speed = 0.0;
-    let len = (uv_x*uv_x+uv_y*uv_y+fov*fov).sqrt();
+    let uv_x:f64 = (x*aspect_x) as f64;
+    let uv_y = y as f64;
+    let fov = 1.4;
+    let card_half_x = 0.24;
+    let card_half_y = 0.35;
+    let len = (uv_x*uv_x+uv_y*uv_y+fov*fov).sqrt() as f64;
     let cam_dist = 2.5;
     let rad = 1.6;
     let rd = (uv_x/len,uv_y/len,-fov/len);
-    let mut min_t = 1000.0f32;
+    let mut min_t = 1000.0;
     let mut hit_card:Option<usize> = None;
     for i in 0..num
     {
-        let angle = (i as f32)*(6.2832/(num as f32)) + angular_speed*time;
+        let angle = (i as f64)*(6.2832/(num as f64)) + offset;
         let s = angle.sin();
         let c = angle.cos();
-        let center = (rad*s,-0.4f32,rad*c-cam_dist);
-        let normal = (s,0.0f32,c);
-        let tangent = (c,0.0f32,-s);
+        let center = (rad*s,-0.4f64,rad*c-cam_dist);
+        let normal = (s,0.0f64,c);
+        let tangent = (c,0.0f64,-s);
         let denom = rd.0*normal.0 + rd.1*normal.1 + rd.2*normal.2;
         if denom>-0.001
         {

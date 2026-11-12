@@ -4,6 +4,7 @@ uniform vec2 u_mouse;
 uniform float time;
 uniform float eye_height;
 uniform int mode;
+uniform float offset;
 varying vec2 v_uv;
 #define MAX_CARDS 20
 
@@ -377,7 +378,6 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
 {
     vec2 card_half = vec2(0.24,0.35);
     float angle = 0.0;
-    float angular_speed = 0.0;
     float cam_dist = 2.5;
     float rad = 1.6;
     float fov = 1.4;
@@ -387,7 +387,7 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
     vec3 col = vec3(0.0);
     for(int i = 0;i<MAX_CARDS;i++) {
         if(i>=num) break;
-        angle = float(i)*(6.2832/float(num)) + angular_speed*time;
+        angle = float(i)*(6.2832/float(num)) + offset;
         float s = sin(angle);
         float c = cos(angle);
         vec3 center = vec3(rad*s,-0.4,rad*c - cam_dist);

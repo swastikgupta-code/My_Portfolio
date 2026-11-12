@@ -19,6 +19,7 @@ features = [
   "NodeList",
   "HtmlElement",
   "HtmlCollection",
+  "WheelEvent",
   "CssStyleDeclaration",
   "HtmlCanvasElement",
   "HtmlButtonElement",
