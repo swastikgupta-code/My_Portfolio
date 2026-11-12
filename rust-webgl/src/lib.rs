@@ -245,6 +245,7 @@ fn make_button_left(button: HtmlButtonElement,doc_clone: Document,col: &str)
     let _ = style.set_property("height", "4vh");
     let _ = style.set_property("position", "fixed");
     let _ = style.set_property("bottom", "15px");
+    let _ = style.set_property("pointer-events", "all");
 }
 fn make_button_right(button: HtmlButtonElement,doc_clone: Document,col: &str)
 {
@@ -262,6 +263,7 @@ fn make_button_right(button: HtmlButtonElement,doc_clone: Document,col: &str)
     let _ = style.set_property("position", "fixed");
     let _ = style.set_property("bottom", "15px");
     let _ = style.set_property("right", "15px");
+    let _ = style.set_property("pointer-events", "all");
 }
 fn hit_card(x:f32,y:f32,aspect_x:f32,time:f32,num: usize) -> Option<usize>
 {
@@ -350,6 +352,7 @@ fn activate_mode(btn_mode: i32,mode: &Rc<RefCell<i32>>,doc: &Document)
             if let Ok(btn) = btn_ele.dyn_into::<HtmlButtonElement>()
             {
                 btn.set_disabled(true);
+                let _ = btn.style().set_property("pointer-events", "none");
                 let _ = btn.style().set_property("background", "transparent");
             }
         }
