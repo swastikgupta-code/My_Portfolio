@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::fmt::Alignment::Center;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -316,4 +317,46 @@ fn make_button_right(button: HtmlButtonElement,doc_clone: Document,col: &str)
     let _ = style.set_property("position", "fixed");
     let _ = style.set_property("bottom", "15px");
     let _ = style.set_property("right", "15px");
+}
+fn hit_card(x:f32,y:f32,aspect_x:f32,time:f32,num: usize) -> Option<usize>
+{
+    let uv_x = x*aspect_x;
+    let uv_y = y;
+    let fov = 1.4f32;
+    let card_half_x = 0.25f32;
+    let card_half_y = 0.35f32;
+    let angular_speed = 0.6;
+    let len = (uv_x*uv_x+uv_y*uv_y+fov*fov).sqrt();
+    let cam_dist = 2.5;
+    let rad = 1.6;
+    let rd = (uv_x/len,uv_y/len,fov/len);
+    let mut min_t = 1000.0f32;
+    let mut hit_card:Option<usize> = None;
+    for i in 0..num
+    {
+        let angle = (i as f32)*(6.2831/(num as f32)) + angular_speed*time;
+        let s = angle.sin();
+        let c = angle.cos();
+        let center = (rad*s,-0.4f32,rad*c-cam_dist);
+        let normal = (s,0.0f32,c);
+        let tangent = (c,0.0f32,-s);
+        let denom = rd.0*normal.0 + rd.1*normal.1 + rd.2*normal.2;
+        if denom>0.001
+        {
+            continue;
+        }
+        let t = (center.0 * normal.0 + center.1 * normal.1 + center.2*normal.2)/denom;
+        if t>0.0 && t<min_t
+        {
+            let disp = (rd.0*t-center.0,rd.1*t-center.1,rd.2*t-center.2);
+            let pos_x = disp.0 * tangent.0 + disp.1 * tangent.1 + disp.2 * tangent.2;
+            let pos_y = disp.1;
+            if pos_x.abs() < card_half_x && pos_y.abs() < card_half_y
+            {
+                min_t = t;
+                hit_card = Some(i);
+            }
+        }
+    }
+    return hit_card;
 }
