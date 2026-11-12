@@ -5,7 +5,7 @@ uniform float time;
 uniform float eye_height;
 uniform int mode;
 varying vec2 v_uv;
-#define MAX_CARDS 4
+#define MAX_CARDS 20
 
 float sd_ellipse(vec2 p,vec2 rad)
 {
@@ -377,7 +377,7 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
 {
     vec2 card_half = vec2(0.24,0.35);
     float angle = 0.0;
-    float angular_speed = 0.3;
+    float angular_speed = 0.6;
     float cam_dist = 2.5;
     float rad = 1.6;
     float fov = 1.4;
@@ -387,11 +387,7 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
     vec3 col = vec3(0.0);
     for(int i = 0;i<MAX_CARDS;i++) {
         if(i>=num) break;
-        angle = float(i)*(3.1415/float(num)) + angular_speed*time;
-        if(angle>3.1415)
-        {
-            angle -= 3.1415;
-        }
+        angle = float(i)*(6.2832/float(num)) + angular_speed*time;
         float s = sin(angle);
         float c = cos(angle);
         vec3 center = vec3(rad*s,-0.4,rad*c - cam_dist);
@@ -414,14 +410,12 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
                 min_t = t;
                 vec2 c_uv = pos/card_half;
                 vec3 c_col = vec3(0.0);
-                if(i==0)
+                if(mod(float(i),3.0)<0.5)
                     c_col = lava(c_uv);
-                else if(i==1)
+                else if(mod(float(i),3.0)<1.5)
                     c_col = ocean(c_uv);
-                else if(i==2)
+                else if(mod(float(i),3.0)<2.5)
                     c_col = nature(c_uv,1.0);
-                else if(i==3)
-                    c_col = lightning(c_uv);
                 c_col = c_col * card_mask;
                 col = c_col;
             }
@@ -447,7 +441,7 @@ void main()
     vec3 col = e_col;
     if(mode==0)
     {
-        int number_of_cards = 3;
+        int number_of_cards = 15;
         vec3 c_col = card_color(aspect,uv,number_of_cards);
         col = e_col + c_col;
     }
