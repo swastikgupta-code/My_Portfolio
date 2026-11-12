@@ -89,6 +89,7 @@ body {
     padding: 0;
     pointer-events: auto;
     z-index: 100;
+    pointer-events: none;
 }
 #lava {
     top: 30.2vh;
