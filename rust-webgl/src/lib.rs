@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::fmt::Alignment::Center;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -61,11 +60,6 @@ pub fn start()-> Result<(),JsValue> {
         ("ocean",2),
         ("nature",3)
     ];
-    let btn_col = [
-        "darkred",
-        "darkturquoise",
-        "darkgreen"
-    ];
     for &(id,btn_mode) in &buttons
     {
         if let Some(elem) = document.get_element_by_id(id)
@@ -74,100 +68,7 @@ pub fn start()-> Result<(),JsValue> {
             let mode_clone = Rc::clone(&mode);
             let doc_clone = document.clone();
             let btn_callback = Closure::wrap(Box::new(move || {
-                *mode_clone.borrow_mut() = btn_mode;
-                if let Some(container) = doc_clone.get_element_by_id("main_container")
-                {
-                    if let Ok(spans) = container.query_selector_all("span")
-                    {
-                        let length = spans.length();
-                        for i in 0..length
-                        {
-                            if let Some(span) = spans.get(i)
-                            {
-                                if let Ok(element) = span.dyn_into::<Element>()
-                                {
-                                    element.remove();
-                                }
-                            }
-                        }
-                    }
-                }
-                if let Some(welcome) = doc_clone.get_element_by_id("welcome")
-                {
-                    if let Ok(element) = welcome.dyn_into::<Element>()
-                    {
-                        element.remove();
-                    }
-                }
-                for &(id2,_mode2) in &buttons
-                {
-                    if let Some(btn_ele) = doc_clone.get_element_by_id(id2)
-                    {
-                        if let Ok(btn) = btn_ele.dyn_into::<HtmlButtonElement>()
-                        {
-                            btn.set_disabled(true);
-                            let _ = btn.style().set_property("background", "transparent");
-                        }
-                    }
-                }
-                if btn_mode>1
-                {
-                    let prev_id = buttons[(btn_mode-2) as usize].0;
-                    if let Some(ele) = doc_clone.get_element_by_id(prev_id)
-                    {
-                        if let Ok(ele_btn) = ele.dyn_into::<HtmlButtonElement>()
-                        {
-                            make_button_left(ele_btn, doc_clone.clone(),btn_col[(btn_mode-2) as usize]);
-                        }
-                    }
-                }
-                if (btn_mode as usize)<buttons.len()
-                {
-                    let next_id = buttons[btn_mode as usize].0;
-                    if let Some(ele) = doc_clone.get_element_by_id(next_id)
-                    {
-                        if let Ok(ele_btn) = ele.dyn_into::<HtmlButtonElement>()
-                        {
-                            make_button_right(ele_btn, doc_clone.clone(),btn_col[btn_mode as usize]);
-                        }
-                    }
-                }
-                let containers: HtmlCollection = doc_clone.get_elements_by_class_name("containers");
-                for i in 0..containers.length()
-                {
-                    if let Some(container) = containers.item(i)
-                    {
-                        if let Ok(cont) = container.dyn_into::<HtmlElement>()
-                        {
-                            let _ = cont.style().set_property("visibility", "hidden");
-                            let _ = cont.style().set_property("display", "none");
-                        }
-                    }
-                }
-                match id
-                {
-                    "lava" => {
-                        if let Some(element) = doc_clone.get_element_by_id("about_container")
-                        {
-                            if let Ok(about_container) = element.dyn_into::<HtmlElement>()
-                            {
-                                let _ = about_container.style().set_property("visibility","visible");
-                                let _ = about_container.style().set_property("display","block");
-                            }
-                        }
-                    }
-                    "ocean" => {
-                        if let Some(element) = doc_clone.get_element_by_id("project_container")
-                        {
-                            if let Ok(project_container) = element.dyn_into::<HtmlElement>()
-                            {
-                                let _ = project_container.style().set_property("visibility","visible");
-                                let _ = project_container.style().set_property("display","block");
-                            }
-                        }
-                    }
-                    _ => {}
-                }
+                activate_mode(btn_mode, &mode_clone, &doc_clone);
             }) as Box<dyn FnMut()>);
             button.add_event_listener_with_callback("click", btn_callback.as_ref().unchecked_ref())?;
             btn_callback.forget();
@@ -359,4 +260,112 @@ fn hit_card(x:f32,y:f32,aspect_x:f32,time:f32,num: usize) -> Option<usize>
         }
     }
     return hit_card;
+}
+fn activate_mode(btn_mode: i32,mode: &Rc<RefCell<i32>>,doc: &Document)
+{
+    let btn_col = [
+        "darkred",
+        "darkturquoise",
+        "darkgreen"
+    ];
+    let buttons = [
+        ("lava",1),
+        ("ocean",2),
+        ("nature",3)
+    ];
+    let id = buttons[(btn_mode-1) as usize].0;
+    *mode.borrow_mut() = btn_mode;
+    if let Some(container) = doc.get_element_by_id("main_container")
+    {
+        if let Ok(spans) = container.query_selector_all("span")
+        {
+            let length = spans.length();
+            for i in 0..length
+            {
+                if let Some(span) = spans.get(i)
+                {
+                    if let Ok(element) = span.dyn_into::<Element>()
+                    {
+                        element.remove();
+                    }
+                }
+            }
+        }
+    }
+    if let Some(welcome) = doc.get_element_by_id("welcome")
+    {
+        if let Ok(element) = welcome.dyn_into::<Element>()
+        {
+            element.remove();
+        }
+    }
+    for &(id2,_mode2) in &buttons
+    {
+        if let Some(btn_ele) = doc.get_element_by_id(id2)
+        {
+            if let Ok(btn) = btn_ele.dyn_into::<HtmlButtonElement>()
+            {
+                btn.set_disabled(true);
+                let _ = btn.style().set_property("background", "transparent");
+            }
+        }
+    }
+    if btn_mode>1
+    {
+        let prev_id = buttons[(btn_mode-2) as usize].0;
+        if let Some(ele) = doc.get_element_by_id(prev_id)
+        {
+            if let Ok(ele_btn) = ele.dyn_into::<HtmlButtonElement>()
+            {
+                make_button_left(ele_btn, doc.clone(),btn_col[(btn_mode-2) as usize]);
+            }
+        }
+    }
+    if (btn_mode as usize)<buttons.len()
+    {
+        let next_id = buttons[btn_mode as usize].0;
+        if let Some(ele) = doc.get_element_by_id(next_id)
+        {
+            if let Ok(ele_btn) = ele.dyn_into::<HtmlButtonElement>()
+            {
+                make_button_right(ele_btn, doc.clone(),btn_col[btn_mode as usize]);
+            }
+        }
+    }
+    let containers: HtmlCollection = doc.get_elements_by_class_name("containers");
+    for i in 0..containers.length()
+    {
+        if let Some(container) = containers.item(i)
+        {
+            if let Ok(cont) = container.dyn_into::<HtmlElement>()
+            {
+                let _ = cont.style().set_property("visibility", "hidden");
+                let _ = cont.style().set_property("display", "none");
+            }
+        }
+    }
+    match id
+    {
+        "lava" => {
+            if let Some(element) = doc.get_element_by_id("about_container")
+            {
+                if let Ok(about_container) = element.dyn_into::<HtmlElement>()
+                {
+                    let _ = about_container.style().set_property("visibility","visible");
+                    let _ = about_container.style().set_property("display","block");
+                }
+            }
+        }
+        "ocean" => {
+            if let Some(element) = doc.get_element_by_id("project_container")
+            {
+                if let Ok(project_container) = element.dyn_into::<HtmlElement>()
+                {
+                    let _ = project_container.style().set_property("visibility","visible");
+                    let _ = project_container.style().set_property("display","block");
+                }
+            }
+        }
+        _ => {}
+    }
 }
