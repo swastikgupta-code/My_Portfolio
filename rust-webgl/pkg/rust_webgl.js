@@ -86,6 +86,10 @@ function __wbg_get_imports() {
             const ret = arg0.createShader(arg1 >>> 0);
             return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
         },
+        __wbg_deltaY_37dc0a54748a91f4: function(arg0) {
+            const ret = arg0.deltaY;
+            return ret;
+        },
         __wbg_document_3b5c3071b43e97ee: function(arg0) {
             const ret = arg0.document;
             return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
@@ -299,20 +303,25 @@ function __wbg_get_imports() {
         },
         __wbindgen_generic_0000000000000001: function(arg0, arg1) {
             // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [NamedExternref("MouseEvent")], shim_idx: 1, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-            const ret = makeMutClosure(arg0, arg1, wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_5212f5cdc20f014___features__gen_MouseEvent__MouseEvent______true_);
+            const ret = makeMutClosure(arg0, arg1, wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_40de4f0207f289be___features__gen_MouseEvent__MouseEvent______true_);
             return ret;
         },
         __wbindgen_generic_0000000000000002: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [], shim_idx: 3, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-            const ret = makeMutClosure(arg0, arg1, wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke_______true_);
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [NamedExternref("WheelEvent")], shim_idx: 1, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            const ret = makeMutClosure(arg0, arg1, wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_40de4f0207f289be___features__gen_MouseEvent__MouseEvent______true__2);
             return ret;
         },
         __wbindgen_generic_0000000000000003: function(arg0, arg1) {
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [], shim_idx: 4, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            const ret = makeMutClosure(arg0, arg1, wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke_______true_);
+            return ret;
+        },
+        __wbindgen_generic_0000000000000004: function(arg0, arg1) {
             // Cast intrinsic for `Ref(Slice(F32)) -> NamedExternref("Float32Array")`.
             const ret = getArrayF32FromWasm0(arg0, arg1);
             return ret;
         },
-        __wbindgen_generic_0000000000000004: function(arg0, arg1) {
+        __wbindgen_generic_0000000000000005: function(arg0, arg1) {
             // Cast intrinsic for `Ref(String) -> Externref`.
             const ret = getStringFromWasm0(arg0, arg1);
             return ret;
@@ -336,8 +345,12 @@ function wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke_______true
     wasm.wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke_______true_(arg0, arg1);
 }
 
-function wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_5212f5cdc20f014___features__gen_MouseEvent__MouseEvent______true_(arg0, arg1, arg2) {
-    wasm.wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_5212f5cdc20f014___features__gen_MouseEvent__MouseEvent______true_(arg0, arg1, arg2);
+function wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_40de4f0207f289be___features__gen_MouseEvent__MouseEvent______true_(arg0, arg1, arg2) {
+    wasm.wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_40de4f0207f289be___features__gen_MouseEvent__MouseEvent______true_(arg0, arg1, arg2);
+}
+
+function wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_40de4f0207f289be___features__gen_MouseEvent__MouseEvent______true__2(arg0, arg1, arg2) {
+    wasm.wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_40de4f0207f289be___features__gen_MouseEvent__MouseEvent______true__2(arg0, arg1, arg2);
 }
 
 function addToExternrefTable0(obj) {
