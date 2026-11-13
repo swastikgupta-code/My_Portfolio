@@ -8,8 +8,9 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly start: () => [number, number];
-    readonly wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_40de4f0207f289be___features__gen_MouseEvent__MouseEvent______true_: (a: number, b: number, c: any) => void;
-    readonly wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_40de4f0207f289be___features__gen_MouseEvent__MouseEvent______true__2: (a: number, b: number, c: any) => void;
+    readonly wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_830d274a774d09e3___features__gen_MouseEvent__MouseEvent______true_: (a: number, b: number, c: any) => void;
+    readonly wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_830d274a774d09e3___features__gen_MouseEvent__MouseEvent______true__2: (a: number, b: number, c: any) => void;
+    readonly wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke___web_sys_830d274a774d09e3___features__gen_MouseEvent__MouseEvent______true__3: (a: number, b: number, c: any) => void;
     readonly wasm_bindgen_a1641b8294d32c60___convert__closures_____invoke_______true_: (a: number, b: number) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

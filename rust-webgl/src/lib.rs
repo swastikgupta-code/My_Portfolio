@@ -3,7 +3,7 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::Document;
-use web_sys::{window,HtmlCollection,WheelEvent,HtmlElement,Element,HtmlButtonElement,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
+use web_sys::{window,TouchEvent,TouchList,Touch,HtmlCollection,WheelEvent,HtmlElement,Element,HtmlButtonElement,HtmlCanvasElement,MouseEvent,WebGlProgram,WebGlShader,WebGlRenderingContext as GL};
 #[wasm_bindgen]
 pub fn start()-> Result<(),JsValue> {
     let window = window().expect("unable to create window");
@@ -165,6 +165,48 @@ pub fn start()-> Result<(),JsValue> {
         mousedown_callback.forget();
         mouseup_callback.forget();
         scroll_callback.forget();
+    }
+    {
+        let dragging_start = Rc::clone(&is_dragging);
+        let last_x_start = Rc::clone(&last_move_x);
+        let touch_start_callback = Closure::wrap(Box::new(move |event: TouchEvent| {
+            if let Some(touch) = event.touches().get(0)
+            {
+                *dragging_start.borrow_mut() = true;
+                *last_x_start.borrow_mut() = touch.client_x() as f64;
+            }
+        }) as Box<dyn FnMut(_)>);
+        let dragging_move = Rc::clone(&is_dragging);
+        let last_x_move = Rc::clone(&last_move_x);
+        let offset_move = Rc::clone(&card_offset);
+        let touch_move_callback = Closure::wrap(Box::new(move |event: TouchEvent| {
+            if let Some(touch) = event.touches().get(0)
+            {
+                if *dragging_move.borrow()==true
+                {
+                    let current_x = touch.client_x() as f64;
+                    let change_x = current_x - *last_x_move.borrow();
+                    *offset_move.borrow_mut() += change_x;
+                    *last_x_move.borrow_mut() = current_x;
+                }
+            }
+        }) as Box<dyn FnMut(_)>);
+        let dragging_end = Rc::clone(&is_dragging);
+        let touch_end_callback = Closure::wrap(Box::new(move || {
+            *dragging_end.borrow_mut() = false;
+        }) as Box<dyn FnMut()>);
+        let dragging_cancel = Rc::clone(&is_dragging);
+        let touch_cancel_callback = Closure::wrap(Box::new(move || {
+            *dragging_cancel.borrow_mut() = false;
+        }) as Box<dyn FnMut()>);
+        canvas.add_event_listener_with_callback("touchstart", touch_start_callback.as_ref().unchecked_ref())?;
+        canvas.add_event_listener_with_callback("touchmove", touch_move_callback.as_ref().unchecked_ref())?;
+        window.add_event_listener_with_callback("touchend", touch_end_callback.as_ref().unchecked_ref())?;
+        window.add_event_listener_with_callback("touchcancel", touch_cancel_callback.as_ref().unchecked_ref())?;
+        touch_start_callback.forget();
+        touch_move_callback.forget();
+        touch_end_callback.forget();
+        touch_cancel_callback.forget();
     }
     let mut eye_height = 0.01f32;
     let mut speed = 0.001f32;
