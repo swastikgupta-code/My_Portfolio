@@ -390,7 +390,7 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
         angle = float(i)*(6.2832/float(num)) + offset;
         float s = sin(angle);
         float c = cos(angle);
-        vec3 center = vec3(rad*s,-0.4,rad*c - cam_dist);
+        vec3 center = vec3(rad*s,-0.2,rad*c - cam_dist);
         vec3 normal = vec3(s,0.0,c);
         vec3 tang = vec3(c,0.0,-s);
         vec3 vert = vec3(0.0,1.0,0.0);

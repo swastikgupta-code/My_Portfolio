@@ -335,7 +335,7 @@ fn hit_card(x:f32,y:f32,aspect_x:f32,offset:f64,num: usize) -> Option<usize>
         let angle = (i as f64)*(6.2832/(num as f64)) + offset;
         let s = angle.sin();
         let c = angle.cos();
-        let center = (rad*s,-0.4f64,rad*c-cam_dist);
+        let center = (rad*s,-0.2f64,rad*c-cam_dist);
         let normal = (s,0.0f64,c);
         let tangent = (c,0.0f64,-s);
         let denom = rd.0*normal.0 + rd.1*normal.1 + rd.2*normal.2;
