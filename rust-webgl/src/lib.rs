@@ -58,6 +58,8 @@ pub fn start()-> Result<(),JsValue> {
     let mode = Rc::new(RefCell::new(0i32));
     let time = Rc::new(RefCell::new(0.0f32));
     let card_offset = Rc::new(RefCell::new(0.0f64));
+    let is_dragging = Rc::new(RefCell::new(false));
+    let last_move_x = Rc::new(RefCell::new(0.0f64));
     let buttons = [
         ("lava",1),
         ("ocean",2),
@@ -103,11 +105,23 @@ pub fn start()-> Result<(),JsValue> {
     }
     let mouse_pos  = Rc::new(RefCell::new((0.0f32,0.0f32)));
     {
+        let dragging_clone = Rc::clone(&is_dragging);
+        let last_x = Rc::clone(&last_move_x);
+        let mousedown_callback = Closure::wrap(Box::new(move |event: MouseEvent| {
+            *dragging_clone.borrow_mut() = true;
+            *last_x.borrow_mut() = event.client_x() as f64;
+        }) as Box<dyn FnMut(_)>);
+        let dragging_up = Rc::clone(&is_dragging);
+        let mouseup_callback = Closure::wrap(Box::new(move || {
+            *dragging_up.borrow_mut() = false;
+        }) as Box<dyn FnMut()>);
         let mouse_pos = mouse_pos.clone();
         let mode_clone = Rc::clone(&mode);
         let offset_clone = Rc::clone(&card_offset);
         let scroll_offset_clone = Rc::clone(&card_offset);
         let canvas_clone = canvas.clone();
+        let dragging_clone_move = Rc::clone(&is_dragging);
+        let last_x_move = Rc::clone(&last_move_x);
         let mouse_callback = Closure::wrap(Box::new(move | event: MouseEvent | {
             let win = web_sys::window().unwrap();
             let w = win.inner_width().unwrap().as_f64().unwrap_or(1.0) as f32;
@@ -115,6 +129,13 @@ pub fn start()-> Result<(),JsValue> {
             let x = (event.client_x() as f32/w)*2.0 - 1.0;
             let y = -(event.client_y() as f32/h)*2.0 + 1.0;
             *mouse_pos.borrow_mut() = (x,y);
+            if *dragging_clone_move.borrow()==true
+            {
+                let current_x = event.client_x() as f64;
+                let change_x = current_x - *last_x_move.borrow();
+                *offset_clone.borrow_mut() += change_x * 0.5;
+                *last_x_move.borrow_mut() = current_x;
+            }
             if *mode_clone.borrow() == 0
             {
                 let current_offset = *offset_clone.borrow();
@@ -136,8 +157,12 @@ pub fn start()-> Result<(),JsValue> {
             *scroll_offset_clone.borrow_mut() += event.delta_y() * 0.5;
         }) as Box<dyn FnMut(_)>);
         window.add_event_listener_with_callback("mousemove", mouse_callback.as_ref().unchecked_ref())?;
+        window.add_event_listener_with_callback("mouseup", mouseup_callback.as_ref().unchecked_ref())?;
+        canvas.add_event_listener_with_callback("mousedown", mousedown_callback.as_ref().unchecked_ref())?;
         canvas.add_event_listener_with_callback("wheel", scroll_callback.as_ref().unchecked_ref())?;
         mouse_callback.forget();
+        mousedown_callback.forget();
+        mouseup_callback.forget();
         scroll_callback.forget();
     }
     let mut eye_height = 0.01f32;
