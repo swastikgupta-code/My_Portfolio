@@ -61,6 +61,7 @@ pub fn start()-> Result<(),JsValue> {
     let is_dragging = Rc::new(RefCell::new(false));
     let last_move_x = Rc::new(RefCell::new(0.0f64));
     let buttons = [
+        ("back",0),
         ("lava",1),
         ("ocean",2),
         ("nature",3)
@@ -300,6 +301,22 @@ fn make_button_right(button: HtmlButtonElement,doc_clone: Document,col: &str)
     let _ = style.set_property("right", "15px");
     let _ = style.set_property("pointer-events", "all");
 }
+fn make_button_top(button: HtmlButtonElement,doc_clone: Document,col: &str)
+{
+    if let Some(body) = doc_clone.body()
+    {
+        let _ = body.append_child(&button);
+    }
+    button.set_disabled(false);
+    let style = button.style();
+    let _ = style.set_property("background", col);
+    let _ = style.set_property("top", "15px");
+    let _ = style.set_property("left", "15px");
+    let _ = style.set_property("width", "8vw");
+    let _ = style.set_property("height", "4vh");
+    let _ = style.set_property("position", "fixed");
+    let _ = style.set_property("pointer-events", "all");
+}
 fn hit_card(x:f32,y:f32,aspect_x:f32,offset:f64,num: usize) -> Option<usize>
 {
     let uv_x:f64 = (x*aspect_x) as f64;
@@ -344,16 +361,17 @@ fn hit_card(x:f32,y:f32,aspect_x:f32,offset:f64,num: usize) -> Option<usize>
 fn activate_mode(btn_mode: i32,mode: &Rc<RefCell<i32>>,doc: &Document)
 {
     let btn_col = [
+        "black",
         "darkred",
         "darkturquoise",
         "darkgreen"
     ];
     let buttons = [
+        ("back",0),
         ("lava",1),
         ("ocean",2),
         ("nature",3)
     ];
-    let id = buttons[(btn_mode-1) as usize].0;
     *mode.borrow_mut() = btn_mode;
     if let Some(container) = doc.get_element_by_id("main_container")
     {
@@ -393,24 +411,32 @@ fn activate_mode(btn_mode: i32,mode: &Rc<RefCell<i32>>,doc: &Document)
     }
     if btn_mode>1
     {
-        let prev_id = buttons[(btn_mode-2) as usize].0;
+        let prev_id = buttons[(btn_mode-1) as usize].0;
         if let Some(ele) = doc.get_element_by_id(prev_id)
         {
             if let Ok(ele_btn) = ele.dyn_into::<HtmlButtonElement>()
             {
-                make_button_left(ele_btn, doc.clone(),btn_col[(btn_mode-2) as usize]);
+                make_button_left(ele_btn, doc.clone(),btn_col[(btn_mode-1) as usize]);
             }
         }
     }
-    if (btn_mode as usize)<buttons.len()
+    if ((btn_mode+1) as usize)<buttons.len()
     {
-        let next_id = buttons[btn_mode as usize].0;
+        let next_id = buttons[(btn_mode+1) as usize].0;
         if let Some(ele) = doc.get_element_by_id(next_id)
         {
             if let Ok(ele_btn) = ele.dyn_into::<HtmlButtonElement>()
             {
-                make_button_right(ele_btn, doc.clone(),btn_col[btn_mode as usize]);
+                make_button_right(ele_btn, doc.clone(),btn_col[(btn_mode+1) as usize]);
             }
+        }
+    }
+    let back_id = buttons[0].0;
+    if let Some(ele) = doc.get_element_by_id(back_id)
+    {
+        if let Ok(ele_btn) = ele.dyn_into::<HtmlButtonElement>()
+        {
+            make_button_top(ele_btn, doc.clone(),btn_col[0]);
         }
     }
     let containers: HtmlCollection = doc.get_elements_by_class_name("containers");
@@ -425,6 +451,11 @@ fn activate_mode(btn_mode: i32,mode: &Rc<RefCell<i32>>,doc: &Document)
             }
         }
     }
+    if btn_mode==0
+    {
+        return;
+    }
+    let id = buttons[(btn_mode) as usize].0;
     match id
     {
         "lava" => {
