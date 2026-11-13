@@ -409,6 +409,22 @@ fn activate_mode(btn_mode: i32,mode: &Rc<RefCell<i32>>,doc: &Document)
             }
         }
     }
+    let containers: HtmlCollection = doc.get_elements_by_class_name("containers");
+    for i in 0..containers.length()
+    {
+        if let Some(container) = containers.item(i)
+        {
+            if let Ok(cont) = container.dyn_into::<HtmlElement>()
+            {
+                let _ = cont.style().set_property("visibility", "hidden");
+                let _ = cont.style().set_property("display", "none");
+            }
+        }
+    }
+    if btn_mode==0
+    {
+        return;
+    }
     if btn_mode>1
     {
         let prev_id = buttons[(btn_mode-1) as usize].0;
@@ -438,22 +454,6 @@ fn activate_mode(btn_mode: i32,mode: &Rc<RefCell<i32>>,doc: &Document)
         {
             make_button_top(ele_btn, doc.clone(),btn_col[0]);
         }
-    }
-    let containers: HtmlCollection = doc.get_elements_by_class_name("containers");
-    for i in 0..containers.length()
-    {
-        if let Some(container) = containers.item(i)
-        {
-            if let Ok(cont) = container.dyn_into::<HtmlElement>()
-            {
-                let _ = cont.style().set_property("visibility", "hidden");
-                let _ = cont.style().set_property("display", "none");
-            }
-        }
-    }
-    if btn_mode==0
-    {
-        return;
     }
     let id = buttons[(btn_mode) as usize].0;
     match id
