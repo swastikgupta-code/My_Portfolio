@@ -123,3 +123,6 @@ body {
         filter: blur(0);
     }
 }
+a {
+    pointer-events: all;
+}
