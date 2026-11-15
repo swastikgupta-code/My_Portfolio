@@ -402,6 +402,18 @@ vec3 lightning(vec2 c_uv)
         float bolt = (core_arc + halo_arc) * flash_intensity;
         sky_col = mix(sky_col,bolt_blue_colour,clamp(halo_arc*flash_intensity,0.0,1.0));
         sky_col = mix(sky_col,bolt_white_colour,clamp(core_arc*flash_intensity,0.0,1.0));
+        float secondary_bolt_start_y = 0.15;
+        if(c_uv.y < secondary_bolt_start_y)
+        {
+            float prog = secondary_bolt_start_y-c_uv.y;
+            float wobble = bolt_wobble + prog * 0.65;
+            wobble += 0.06 * (noise(vec2(c_uv.y*18.0,strike_seed*43.1))-0.5);
+            float secondary_bolt_x = bolt_offset_x + wobble;
+            float d = abs(c_uv.x-secondary_bolt_x);
+            float core = smoothstep(0.007,0.0,d) * (1.0 - prog*1.2);
+            float halo = smoothstep(0.09,0.0,d) * 0.4 * (1.0-prog*1.2);
+            sky_col += (bolt_blue_colour * halo + bolt_white_colour * core) * flash_intensity;
+        }
     }
     return sky_col;
 }
