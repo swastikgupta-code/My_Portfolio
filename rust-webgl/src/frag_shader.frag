@@ -375,6 +375,8 @@ vec3 lightning(vec2 c_uv)
     vec3 night_colour = vec3(0.02,0.01,0.05);
     vec3 storm_colour = vec3(0.16,0.08,0.26);
     vec3 flash_colour = vec3(0.55,0.40,0.85);
+    vec3 bolt_blue_colour = vec3(0.4,0.85,1.0);
+    vec3 bolt_white_colour = vec3(1.0);
     vec2 cloud_uv = c_uv * vec2(1.5,1.0) + vec2(time*0.05,0.0);
     vec2 warp = vec2(fbm(cloud_uv),fbm(cloud_uv + vec2(3.7,1.2)));
     float clouds = fbm(cloud_uv + warp * 1.8);
@@ -396,9 +398,7 @@ vec3 lightning(vec2 c_uv)
         float bolt_main_x = bolt_offset_x + bolt_wobble * (1.1 - c_uv.y*0.4);
         float d_bolt = abs(c_uv.x-bolt_main_x);
         float core_arc = smoothstep(0.012,0.0,d_bolt);
-        float halo_arc = smoothstep(0.018,0.0,d_bolt);
-        vec3 bolt_blue_colour = vec3(0.4,0.85,1.0);
-        vec3 bolt_white_colour = vec3(1.0);
+        float halo_arc = smoothstep(0.18,0.0,d_bolt) * 0.6;
         float bolt = (core_arc + halo_arc) * flash_intensity;
         sky_col = mix(sky_col,bolt_blue_colour,clamp(halo_arc*flash_intensity,0.0,1.0));
         sky_col = mix(sky_col,bolt_white_colour,clamp(core_arc*flash_intensity,0.0,1.0));
@@ -414,14 +414,25 @@ vec3 lightning(vec2 c_uv)
             float halo = smoothstep(0.09,0.0,d) * 0.4 * (1.0-prog*1.2);
             sky_col += (bolt_blue_colour * halo + bolt_white_colour * core) * flash_intensity;
         }
-        vec2 rain_uv = c_uv * vec2(18.0,2.5);
-        rain_uv.x += c_uv.y * 1.2;
-        rain_uv.y += time * 12.0;
-        float rain_noise = noise(rain_uv);
-        float rain_streak = smoothstep(0.72,0.95,rain_noise)*0.28;
-        sky_col += vec3(0.6,0.8,1.0)*rain_streak*(0.6 + flash_intensity * 0.8);
     }
-    return sky_col;
+    vec2 rain_uv = c_uv * vec2(18.0,2.5);
+    rain_uv.x += c_uv.y * 1.2;
+    rain_uv.y += time * 12.0;
+    float rain_noise = noise(rain_uv);
+    float rain_streak = smoothstep(0.72,0.95,rain_noise)*0.28;
+    sky_col += vec3(0.6,0.8,1.0)*rain_streak*(0.6 + flash_intensity * 0.8);
+    float mountain_profile = -0.65;
+    mountain_profile += 0.18 * sin(c_uv.x * 2.8 + 1.4);
+    mountain_profile += 0.11 * sin(c_uv.x *6.5 + 1.2);
+    mountain_profile += 0.22 * exp(-pow(abs(c_uv.x-bolt_offset_x)*6.0,2.0));
+    mountain_profile += 0.32 * pow(abs(c_uv.x),2.4);
+    float mountain_mask = smoothstep(-0.015,0.015,c_uv.y-mountain_profile);
+    float rocks = fbm(c_uv * 10.0);
+    vec3 rock_col = mix(vec3(0.03,0.02,0.05),vec3(0.08,0.06,0.12),rocks);
+    float rock_outer = smoothstep(0.07,0.0,abs(c_uv.y-mountain_profile));
+    rock_col += (bolt_blue_colour * 0.7 + bolt_white_colour * 0.5) * rock_outer * (0.15 + flash_intensity * 1.2);
+    vec3 scene_col = mix(rock_col,sky_col,mountain_mask);
+    return scene_col;
 }
 vec3 card_color(vec2 aspect,vec2 uv,int num)
 {
