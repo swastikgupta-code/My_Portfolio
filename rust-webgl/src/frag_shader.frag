@@ -374,10 +374,17 @@ vec3 lightning(vec2 c_uv)
 {
     vec3 night_colour = vec3(0.02,0.01,0.05);
     vec3 storm_colour = vec3(0.16,0.08,0.26);
+    vec3 flash_colour = vec3(0.55,0.40,0.85);
     vec2 cloud_uv = c_uv * vec2(1.5,1.0) + vec2(time*0.05,0.0);
     vec2 warp = vec2(fbm(cloud_uv),fbm(cloud_uv + vec2(3.7,1.2)));
     float clouds = fbm(cloud_uv + warp * 1.8);
     vec3 sky_col = mix(night_colour,storm_colour,clouds*0.8);
+    float cycle = fract(time*0.42);
+    float strike_main = smoothstep(0.0,0.4,cycle) * (1.0-smoothstep(0.04,0.18,cycle));
+    float strike_sub = smoothstep(0.12,0.14,cycle) * (1.0-smoothstep(0.14,0.22,cycle));
+    float flash_intensity = clamp(strike_main * 1.5 + strike_sub,0.0,2.0);
+    sky_col += flash_colour * clouds * flash_intensity * 0.9;
+    sky_col += vec3(0.2,0.25,0.45) * flash_intensity * 0.5;
     return sky_col;
 }
 vec3 card_color(vec2 aspect,vec2 uv,int num)
