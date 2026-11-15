@@ -96,7 +96,7 @@ pub fn start()-> Result<(),JsValue> {
             let x = (event.client_x() as f32/w)*2.0 - 1.0;
             let y = -(event.client_y() as f32/h)*2.0 + 1.0;
             let current_offset = *offset_clone.borrow();
-            if let Some(card_id) = hit_card(x, y, w/h, current_offset, 15)
+            if let Some(card_id) = hit_card(x, y, w/h, current_offset, 16)
             {
                 let target_mode = ((card_id%4)+1) as i32;
                 activate_mode(target_mode, &mode_clone, &doc_clone);
@@ -141,7 +141,7 @@ pub fn start()-> Result<(),JsValue> {
             if *mode_clone.borrow() == 0
             {
                 let current_offset = *offset_clone.borrow();
-                let cursor = if hit_card(x, y, w/h, current_offset, 15).is_some()
+                let cursor = if hit_card(x, y, w/h, current_offset, 16).is_some()
                 {
                     "pointer"
                 }

@@ -503,7 +503,7 @@ void main()
     vec3 col = e_col;
     if(mode==0)
     {
-        int number_of_cards = 15;
+        int number_of_cards = 16;
         vec3 c_col = card_color(aspect,uv,number_of_cards);
         col = e_col + c_col;
     }
