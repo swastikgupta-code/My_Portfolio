@@ -372,7 +372,13 @@ vec3 nature(vec2 c_uv,float width)
 }
 vec3 lightning(vec2 c_uv)
 {
-    return vec3(1.0,1.0,0.0);
+    vec3 night_colour = vec3(0.02,0.01,0.05);
+    vec3 storm_colour = vec3(0.16,0.08,0.26);
+    vec2 cloud_uv = c_uv * vec2(1.5,1.0) + vec2(time*0.05,0.0);
+    vec2 warp = vec2(fbm(cloud_uv),fbm(cloud_uv + vec2(3.7,1.2)));
+    float clouds = fbm(cloud_uv + warp * 1.8);
+    vec3 sky_col = mix(night_colour,storm_colour,clouds*0.8);
+    return sky_col;
 }
 vec3 card_color(vec2 aspect,vec2 uv,int num)
 {
@@ -410,12 +416,14 @@ vec3 card_color(vec2 aspect,vec2 uv,int num)
                 min_t = t;
                 vec2 c_uv = pos/card_half;
                 vec3 c_col = vec3(0.0);
-                if(mod(float(i),3.0)<0.5)
+                if(mod(float(i),4.0)<0.5)
                     c_col = lava(c_uv);
-                else if(mod(float(i),3.0)<1.5)
+                else if(mod(float(i),4.0)<1.5)
                     c_col = ocean(c_uv);
-                else if(mod(float(i),3.0)<2.5)
+                else if(mod(float(i),4.0)<2.5)
                     c_col = nature(c_uv,1.0);
+                else if(mod(float(i),4.0)<3.5)
+                    c_col = lightning(c_uv);
                 c_col = c_col * card_mask;
                 col = c_col;
             }
@@ -458,6 +466,11 @@ void main()
     else if(mode==3)
     {
         vec3 bg_col = nature(uv,aspect.x);
+        col += bg_col;
+    }
+    else if(mode==4)
+    {
+        vec3 bg_col = lightning(uv);
         col += bg_col;
     }
     gl_FragColor = vec4(col,1.0);

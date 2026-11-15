@@ -64,7 +64,8 @@ pub fn start()-> Result<(),JsValue> {
         ("back",0),
         ("lava",1),
         ("ocean",2),
-        ("nature",3)
+        ("nature",3),
+        ("lightning",4)
     ];
     for &(id,btn_mode) in &buttons
     {
@@ -97,7 +98,7 @@ pub fn start()-> Result<(),JsValue> {
             let current_offset = *offset_clone.borrow();
             if let Some(card_id) = hit_card(x, y, w/h, current_offset, 15)
             {
-                let target_mode = ((card_id%3)+1) as i32;
+                let target_mode = ((card_id%4)+1) as i32;
                 activate_mode(target_mode, &mode_clone, &doc_clone);
             }
         }) as Box<dyn FnMut(_)>);
@@ -406,13 +407,15 @@ fn activate_mode(btn_mode: i32,mode: &Rc<RefCell<i32>>,doc: &Document)
         "black",
         "darkred",
         "darkturquoise",
-        "darkgreen"
+        "darkgreen",
+        "purple"
     ];
     let buttons = [
         ("back",0),
         ("lava",1),
         ("ocean",2),
-        ("nature",3)
+        ("nature",3),
+        ("lightning",4)
     ];
     *mode.borrow_mut() = btn_mode;
     if let Some(container) = doc.get_element_by_id("main_container")
