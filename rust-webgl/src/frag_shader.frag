@@ -385,6 +385,24 @@ vec3 lightning(vec2 c_uv)
     float flash_intensity = clamp(strike_main * 1.5 + strike_sub,0.0,2.0);
     sky_col += flash_colour * clouds * flash_intensity * 0.9;
     sky_col += vec3(0.2,0.25,0.45) * flash_intensity * 0.5;
+    float strike_seed = floor(time * 0.42);
+    float bolt_offset_x = (hash1(vec2(strike_seed,1.7))-0.5)*0.7;
+    if(flash_intensity>0.02)
+    {
+        float bolt_wobble = 0.0;
+        bolt_wobble += 0.24 * (noise(vec2(c_uv.y * 5.0,strike_seed * 11.3)) - 0.5);
+        bolt_wobble += 0.12 * (noise(vec2(c_uv.y * 12.0,strike_seed * 17.1)) - 0.5);
+        bolt_wobble += 0.05 * (noise(vec2(c_uv.y * 28.0,strike_seed * 29.5)) - 0.5);
+        float bolt_main_x = bolt_offset_x + bolt_wobble * (1.1 - c_uv.y*0.4);
+        float d_bolt = abs(c_uv.x-bolt_main_x);
+        float core_arc = smoothstep(0.012,0.0,d_bolt);
+        float halo_arc = smoothstep(0.018,0.0,d_bolt);
+        vec3 bolt_blue_colour = vec3(0.4,0.85,1.0);
+        vec3 bolt_white_colour = vec3(1.0);
+        float bolt = (core_arc + halo_arc) * flash_intensity;
+        sky_col = mix(sky_col,bolt_blue_colour,clamp(halo_arc*flash_intensity,0.0,1.0));
+        sky_col = mix(sky_col,bolt_white_colour,clamp(core_arc*flash_intensity,0.0,1.0));
+    }
     return sky_col;
 }
 vec3 card_color(vec2 aspect,vec2 uv,int num)
