@@ -414,6 +414,12 @@ vec3 lightning(vec2 c_uv)
             float halo = smoothstep(0.09,0.0,d) * 0.4 * (1.0-prog*1.2);
             sky_col += (bolt_blue_colour * halo + bolt_white_colour * core) * flash_intensity;
         }
+        vec2 rain_uv = c_uv * vec2(18.0,2.5);
+        rain_uv.x += c_uv.y * 1.2;
+        rain_uv.y += time * 12.0;
+        float rain_noise = noise(rain_uv);
+        float rain_streak = smoothstep(0.72,0.95,rain_noise)*0.28;
+        sky_col += vec3(0.6,0.8,1.0)*rain_streak*(0.6 + flash_intensity * 0.8);
     }
     return sky_col;
 }
